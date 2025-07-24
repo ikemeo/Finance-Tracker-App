@@ -51,24 +51,27 @@ export class ETradeAuth {
     };
 
     try {
-      // Include oauth_callback in the request data for proper signature generation
-      const requestWithCallback = {
-        ...requestData,
-        data: { oauth_callback: 'oob' }
+      // Create OAuth request with callback parameter included in signature
+      const oauthRequest = {
+        url: requestData.url,
+        method: requestData.method,
+        data: {
+          oauth_callback: 'oob'
+        }
       };
       
-      const oauthData = this.oauth.authorize(requestWithCallback, token);
-      
-      // Manually add the oauth_callback to the oauth data
-      oauthData.oauth_callback = 'oob';
-      
+      const oauthData = this.oauth.authorize(oauthRequest, token);
       const oauthHeaders = this.oauth.toHeader(oauthData);
       
-      const response = await axios.get(requestData.url, {
+      const response = await axios({
+        method: 'GET',
+        url: requestData.url,
         headers: {
           'Authorization': oauthHeaders.Authorization
         },
-        params: { oauth_callback: 'oob' }
+        params: {
+          oauth_callback: 'oob'
+        }
       });
 
       const params = new URLSearchParams(response.data);
