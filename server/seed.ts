@@ -21,13 +21,7 @@ async function seed() {
     isConnected: true,
   }).returning();
 
-  const [fidelityAccount] = await db.insert(accounts).values({
-    name: "Fidelity",
-    provider: "fidelity", 
-    accountType: "401k",
-    balance: "135996.00",
-    isConnected: false,
-  }).returning();
+
 
   // Create sample holdings
   await db.insert(holdings).values([
@@ -96,13 +90,7 @@ async function seed() {
       amount: "9461.00",
       symbol: "MSFT",
     },
-    {
-      accountId: fidelityAccount.id,
-      type: "error",
-      description: "Fidelity API temporarily unavailable",
-      amount: null,
-      symbol: null,
-    },
+
   ]);
 
   // Create sample real estate investments
