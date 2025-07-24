@@ -33,7 +33,9 @@ export class ETradeAuth {
       signature_method: 'HMAC-SHA1',
       hash_function(base_string, key) {
         return crypto.createHmac('sha1', key).update(base_string).digest('base64');
-      }
+      },
+      realm: '',
+      version: '1.0'
     });
   }
 
@@ -49,8 +51,24 @@ export class ETradeAuth {
     };
 
     try {
+      // Include oauth_callback in the request data for proper signature generation
+      const requestWithCallback = {
+        ...requestData,
+        data: { oauth_callback: 'oob' }
+      };
+      
+      const oauthData = this.oauth.authorize(requestWithCallback, token);
+      
+      // Manually add the oauth_callback to the oauth data
+      oauthData.oauth_callback = 'oob';
+      
+      const oauthHeaders = this.oauth.toHeader(oauthData);
+      
       const response = await axios.get(requestData.url, {
-        headers: this.oauth.toHeader(this.oauth.authorize(requestData, token))
+        headers: {
+          'Authorization': oauthHeaders.Authorization
+        },
+        params: { oauth_callback: 'oob' }
       });
 
       const params = new URLSearchParams(response.data);
@@ -65,7 +83,10 @@ export class ETradeAuth {
         authUrl
       };
     } catch (error: any) {
-      throw new Error(`Failed to get request token: ${error.message}`);
+      console.error('E*TRADE Request Token Error:', error.response?.data || error.message);
+      console.error('Error status:', error.response?.status);
+      console.error('Error headers:', error.response?.headers);
+      throw new Error(`Failed to get request token: ${error.response?.data || error.message}`);
     }
   }
 
@@ -82,8 +103,14 @@ export class ETradeAuth {
     };
 
     try {
+      const oauthData = this.oauth.authorize(requestData, token);
+      const oauthHeaders = this.oauth.toHeader(oauthData);
+      
       const response = await axios.get(requestData.url, {
-        headers: this.oauth.toHeader(this.oauth.authorize(requestData, token)),
+        headers: {
+          'Authorization': oauthHeaders.Authorization,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
         params: { oauth_verifier: verifier }
       });
 

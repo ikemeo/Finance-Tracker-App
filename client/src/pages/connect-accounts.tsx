@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { RefreshCw, Plus, Settings, CheckCircle, XCircle, AlertCircle, Plug } from 'lucide-react';
 import { ETradeAuth } from '@/components/ETradeAuth';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequestJson } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import type { Account } from '@shared/schema';
 
@@ -22,7 +22,7 @@ export default function ConnectAccounts() {
 
   const syncMutation = useMutation({
     mutationFn: async (accountId: number) => {
-      return apiRequest(`/api/accounts/${accountId}/sync`, {
+      return apiRequestJson(`/api/accounts/${accountId}/sync`, {
         method: 'POST'
       });
     },
@@ -46,7 +46,7 @@ export default function ConnectAccounts() {
 
   const createAccountMutation = useMutation({
     mutationFn: async (provider: string) => {
-      return apiRequest('/api/accounts', {
+      return apiRequestJson('/api/accounts', {
         method: 'POST',
         body: JSON.stringify({
           name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Account`,

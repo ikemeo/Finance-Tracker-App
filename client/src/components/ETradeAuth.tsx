@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { AlertCircle, ExternalLink } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequestJson } from '@/lib/queryClient';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 
@@ -27,7 +27,7 @@ export function ETradeAuth({ accountId, onSuccess }: ETradeAuthProps) {
 
   const startAuthMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('/api/auth/etrade/start', {
+      return apiRequestJson('/api/auth/etrade/start', {
         method: 'POST',
         body: JSON.stringify({ accountId })
       });
@@ -50,7 +50,7 @@ export function ETradeAuth({ accountId, onSuccess }: ETradeAuthProps) {
     mutationFn: async () => {
       if (!authData || !verifier) throw new Error('Missing authentication data');
       
-      return apiRequest('/api/auth/etrade/complete', {
+      return apiRequestJson('/api/auth/etrade/complete', {
         method: 'POST',
         body: JSON.stringify({
           accountId,
