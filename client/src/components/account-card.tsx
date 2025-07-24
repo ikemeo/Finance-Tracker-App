@@ -1,0 +1,62 @@
+import { cn } from "@/lib/utils";
+
+interface AccountCardProps {
+  title: string;
+  value: string;
+  change: string;
+  percentage?: string;
+  icon: React.ReactNode;
+  iconBg: string;
+  positive?: boolean;
+}
+
+const formatCurrency = (value: string) => {
+  const num = parseFloat(value);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(num);
+};
+
+export default function AccountCard({
+  title,
+  value,
+  change,
+  percentage,
+  icon,
+  iconBg,
+  positive = true,
+}: AccountCardProps) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-500">{title}</p>
+          <p className="text-3xl font-bold text-gray-900 mt-2">
+            {formatCurrency(value)}
+          </p>
+          <div className="flex items-center mt-2">
+            <span
+              className={cn(
+                "text-sm font-medium",
+                positive ? "text-success" : "text-error"
+              )}
+            >
+              {positive ? "+" : ""}{change}%
+            </span>
+            {percentage && (
+              <span className="text-gray-500 text-sm ml-2">
+                {percentage}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className={cn("w-12 h-12 bg-opacity-10 rounded-lg flex items-center justify-center", iconBg)}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+}
