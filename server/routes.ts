@@ -417,6 +417,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Plaid Integration Routes
+  app.post("/api/plaid/create-link-token", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      const { plaidService } = await import('./auth/plaid');
+      const linkToken = await plaidService.createLinkToken(userId || 'default_user');
+      res.json({ linkToken });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/plaid/exchange-token", async (req, res) => {
+    try {
+      const { publicToken } = req.body;
+      const { plaidService } = await import('./auth/plaid');
+      const { accessToken, itemId } = await plaidService.exchangePublicToken(publicToken);
+      res.json({ accessToken, itemId });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/plaid/accounts", async (req, res) => {
+    try {
+      const { access_token } = req.query;
+      if (!access_token) {
+        return res.status(400).json({ message: "Access token required" });
+      }
+      const { plaidService } = await import('./auth/plaid');
+      const accounts = await plaidService.getAccounts(access_token as string);
+      res.json(accounts);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/plaid/holdings", async (req, res) => {
+    try {
+      const { access_token, account_id } = req.query;
+      if (!access_token) {
+        return res.status(400).json({ message: "Access token required" });
+      }
+      const { plaidService } = await import('./auth/plaid');
+      const allHoldings = await plaidService.getHoldings(access_token as string);
+      
+      // Filter by account if specified
+      const holdings = account_id 
+        ? allHoldings.filter(h => h.accountId === account_id)
+        : allHoldings;
+      
+      res.json(holdings);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/plaid/item/:accessToken", async (req, res) => {
+    try {
+      const { accessToken } = req.params;
+      const { plaidService } = await import('./auth/plaid');
+      await plaidService.removeItem(accessToken);
+      res.json({ message: "Plaid item removed successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Account sync route
   app.post("/api/accounts/:id/sync", async (req, res) => {
     try {

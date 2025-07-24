@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { RefreshCw, Plus, Settings, CheckCircle, XCircle, AlertCircle, Plug, Trash2, Zap } from 'lucide-react';
+import { RefreshCw, Plus, Settings, CheckCircle, XCircle, AlertCircle, Plug, Trash2, Zap, Building2 } from 'lucide-react';
 import { ETradeAuth } from '@/components/ETradeAuth';
 import { ManualDataEntry } from '@/components/ManualDataEntry';
 import { ETradeHardcodedSync } from '@/components/ETradeHardcodedSync';
+import { PlaidLink } from '@/components/PlaidLink';
 import { apiRequestJson } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import type { Account } from '@shared/schema';
@@ -16,6 +17,7 @@ export default function ConnectAccounts() {
   const [showETradeAuth, setShowETradeAuth] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [showHardcodedSync, setShowHardcodedSync] = useState(false);
+  const [showPlaidLink, setShowPlaidLink] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -208,6 +210,29 @@ export default function ConnectAccounts() {
     );
   }
 
+  if (showPlaidLink && selectedAccountId) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="mb-6">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowPlaidLink(false)}
+            className="mb-4"
+          >
+            ← Back to Accounts
+          </Button>
+        </div>
+        <PlaidLink 
+          accountId={selectedAccountId}
+          onClose={() => {
+            setShowPlaidLink(false);
+            setSelectedAccountId(null);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="mb-8">
@@ -363,19 +388,23 @@ export default function ConnectAccounts() {
                 </CardContent>
               </Card>
 
-              <Card className="opacity-50">
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" 
+                    onClick={() => {
+                      setSelectedAccountId(Date.now());
+                      setShowPlaidLink(true);
+                    }}>
                 <CardContent className="p-6 text-center">
                   <div className="mb-2">
                     <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <span className="text-2xl font-bold text-green-600">S</span>
+                      <Building2 className="h-6 w-6 text-green-600" />
                     </div>
-                    <h3 className="font-semibold">Schwab</h3>
+                    <h3 className="font-semibold">Plaid Banks</h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Coming soon - Schwab integration
+                      Connect to 12,000+ financial institutions
                     </p>
                   </div>
-                  <Button size="sm" className="w-full" disabled>
-                    Coming Soon
+                  <Button size="sm" className="w-full">
+                    Connect with Plaid
                   </Button>
                 </CardContent>
               </Card>
