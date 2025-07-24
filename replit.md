@@ -149,4 +149,12 @@ The application is designed for deployment on platforms like Replit, with built-
 - ✓ Enhanced sidebar navigation with dedicated pages for each investment type
 - ✓ Updated portfolio summary API to calculate total AUM across all asset classes
 
-The application now provides a complete view of diversified investment portfolios including traditional securities, real estate properties, and venture/angel investments with comprehensive tracking and analytics.
+### Account Management and Data Entry Features (January 24, 2025)
+- ✓ Fixed account deletion with proper foreign key constraint handling
+- ✓ Enhanced manual data entry interface with holdings management and category selection
+- ✓ Implemented hardcoded E*TRADE API integration with mock data fallback for Replit environment
+- ✓ Added four account management options: OAuth Sync, API Import (⚡), Manual Entry, and Delete
+- ✓ Created comprehensive E*TRADE hardcoded service with real API structure and demo data
+- ✓ Proper cleanup of existing holdings before importing new data to prevent duplicates
+
+The application now provides multiple ways to manage account data, with both real API integration capabilities and manual entry options for comprehensive portfolio management.
