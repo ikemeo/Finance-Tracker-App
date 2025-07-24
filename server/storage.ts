@@ -15,6 +15,8 @@ import {
   type VentureInvestment,
   type InsertVenture
 } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Account operations
@@ -423,4 +425,141 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database Storage Implementation
+export class DatabaseStorage implements IStorage {
+  // Account operations
+  async getAccounts(): Promise<Account[]> {
+    return await db.select().from(accounts);
+  }
+
+  async getAccount(id: number): Promise<Account | undefined> {
+    const [account] = await db.select().from(accounts).where(eq(accounts.id, id));
+    return account || undefined;
+  }
+
+  async createAccount(account: InsertAccount): Promise<Account> {
+    const [newAccount] = await db
+      .insert(accounts)
+      .values(account)
+      .returning();
+    return newAccount;
+  }
+
+  async updateAccount(id: number, updates: Partial<InsertAccount>): Promise<Account | undefined> {
+    const [updatedAccount] = await db
+      .update(accounts)
+      .set({ ...updates, lastSync: new Date() })
+      .where(eq(accounts.id, id))
+      .returning();
+    return updatedAccount || undefined;
+  }
+
+  // Holdings operations
+  async getHoldings(): Promise<Holding[]> {
+    return await db.select().from(holdings);
+  }
+
+  async getHoldingsByAccount(accountId: number): Promise<Holding[]> {
+    return await db.select().from(holdings).where(eq(holdings.accountId, accountId));
+  }
+
+  async createHolding(holding: InsertHolding): Promise<Holding> {
+    const [newHolding] = await db
+      .insert(holdings)
+      .values(holding)
+      .returning();
+    return newHolding;
+  }
+
+  async updateHolding(id: number, updates: Partial<InsertHolding>): Promise<Holding | undefined> {
+    const [updatedHolding] = await db
+      .update(holdings)
+      .set(updates)
+      .where(eq(holdings.id, id))
+      .returning();
+    return updatedHolding || undefined;
+  }
+
+  // Activities operations
+  async getActivities(): Promise<Activity[]> {
+    return await db.select().from(activities).orderBy(activities.timestamp);
+  }
+
+  async getActivitiesByAccount(accountId: number): Promise<Activity[]> {
+    return await db
+      .select()
+      .from(activities)
+      .where(eq(activities.accountId, accountId))
+      .orderBy(activities.timestamp);
+  }
+
+  async createActivity(activity: InsertActivity): Promise<Activity> {
+    const [newActivity] = await db
+      .insert(activities)
+      .values(activity)
+      .returning();
+    return newActivity;
+  }
+
+  // Real Estate Investment operations
+  async getRealEstateInvestments(): Promise<RealEstateInvestment[]> {
+    return await db.select().from(realEstateInvestments);
+  }
+
+  async getRealEstateInvestment(id: number): Promise<RealEstateInvestment | undefined> {
+    const [investment] = await db
+      .select()
+      .from(realEstateInvestments)
+      .where(eq(realEstateInvestments.id, id));
+    return investment || undefined;
+  }
+
+  async createRealEstateInvestment(investment: InsertRealEstate): Promise<RealEstateInvestment> {
+    const [newInvestment] = await db
+      .insert(realEstateInvestments)
+      .values(investment)
+      .returning();
+    return newInvestment;
+  }
+
+  async updateRealEstateInvestment(id: number, updates: Partial<InsertRealEstate>): Promise<RealEstateInvestment | undefined> {
+    const [updatedInvestment] = await db
+      .update(realEstateInvestments)
+      .set(updates)
+      .where(eq(realEstateInvestments.id, id))
+      .returning();
+    return updatedInvestment || undefined;
+  }
+
+  // Venture Investment operations
+  async getVentureInvestments(): Promise<VentureInvestment[]> {
+    return await db.select().from(ventureInvestments);
+  }
+
+  async getVentureInvestment(id: number): Promise<VentureInvestment | undefined> {
+    const [investment] = await db
+      .select()
+      .from(ventureInvestments)
+      .where(eq(ventureInvestments.id, id));
+    return investment || undefined;
+  }
+
+  async createVentureInvestment(investment: InsertVenture): Promise<VentureInvestment> {
+    const [newInvestment] = await db
+      .insert(ventureInvestments)
+      .values(investment)
+      .returning();
+    return newInvestment;
+  }
+
+  async updateVentureInvestment(id: number, updates: Partial<InsertVenture>): Promise<VentureInvestment | undefined> {
+    const [updatedInvestment] = await db
+      .update(ventureInvestments)
+      .set(updates)
+      .where(eq(ventureInvestments.id, id))
+      .returning();
+    return updatedInvestment || undefined;
+  }
+}
+
+export const storage = new DatabaseStorage();
