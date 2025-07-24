@@ -42,6 +42,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/accounts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const existingAccount = await storage.getAccount(id);
+      if (!existingAccount) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+
+      const updatedAccount = await storage.updateAccount(id, updateData);
+      res.json(updatedAccount);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update account" });
+    }
+  });
+
   app.post("/api/accounts", async (req, res) => {
     try {
       const accountData = insertAccountSchema.parse(req.body);

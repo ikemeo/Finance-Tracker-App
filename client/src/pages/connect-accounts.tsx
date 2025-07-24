@@ -6,12 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { RefreshCw, Plus, Settings, CheckCircle, XCircle, AlertCircle, Plug } from 'lucide-react';
 import { ETradeAuth } from '@/components/ETradeAuth';
+import { ManualDataEntry } from '@/components/ManualDataEntry';
 import { apiRequestJson } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import type { Account } from '@shared/schema';
 
 export default function ConnectAccounts() {
   const [showETradeAuth, setShowETradeAuth] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -134,6 +136,29 @@ export default function ConnectAccounts() {
     );
   }
 
+  if (showManualEntry && selectedAccountId) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="mb-6">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowManualEntry(false)}
+            className="mb-4"
+          >
+            ← Back to Accounts
+          </Button>
+        </div>
+        <ManualDataEntry 
+          accountId={selectedAccountId}
+          onClose={() => {
+            setShowManualEntry(false);
+            setSelectedAccountId(null);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="mb-8">
@@ -183,15 +208,29 @@ export default function ConnectAccounts() {
                         {getStatusText(account)}
                       </Badge>
                       {account.isConnected ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => syncMutation.mutate(account.id)}
-                          disabled={syncMutation.isPending}
-                        >
-                          <RefreshCw className={`h-4 w-4 mr-2 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
-                          Sync
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => syncMutation.mutate(account.id)}
+                            disabled={syncMutation.isPending}
+                            title="Auto-sync account data"
+                          >
+                            <RefreshCw className={`h-4 w-4 mr-2 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
+                            Sync
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedAccountId(account.id);
+                              setShowManualEntry(true);
+                            }}
+                            title="Enter data manually"
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </div>
                       ) : (
                         <Button
                           size="sm"
