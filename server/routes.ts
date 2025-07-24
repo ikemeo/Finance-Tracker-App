@@ -485,6 +485,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // E*TRADE Production OAuth routes
+  app.post("/api/etrade/production/request-token", async (req, res) => {
+    try {
+      const { etradeProductionService } = await import('./auth/etradeProduction');
+      
+      if (!etradeProductionService.isConfigured()) {
+        return res.status(400).json({ 
+          message: "E*TRADE production credentials not configured" 
+        });
+      }
+
+      const result = await etradeProductionService.getOAuthRequestToken();
+      res.json(result);
+    } catch (error: any) {
+      console.error('E*TRADE production request token error:', error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/etrade/production/access-token", async (req, res) => {
+    try {
+      const { requestToken, requestTokenSecret, verifier } = req.body;
+      const { etradeProductionService } = await import('./auth/etradeProduction');
+      
+      const result = await etradeProductionService.getOAuthAccessToken(
+        requestToken, 
+        requestTokenSecret, 
+        verifier
+      );
+      res.json(result);
+    } catch (error: any) {
+      console.error('E*TRADE production access token error:', error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/etrade/production/accounts", async (req, res) => {
+    try {
+      const { accessToken, accessTokenSecret } = req.query;
+      if (!accessToken || !accessTokenSecret) {
+        return res.status(400).json({ message: "Access tokens required" });
+      }
+      
+      const { etradeProductionService } = await import('./auth/etradeProduction');
+      const accounts = await etradeProductionService.getAccountList(
+        accessToken as string, 
+        accessTokenSecret as string
+      );
+      res.json(accounts);
+    } catch (error: any) {
+      console.error('E*TRADE production accounts error:', error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Account sync route
   app.post("/api/accounts/:id/sync", async (req, res) => {
     try {

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { RefreshCw, Plus, Settings, CheckCircle, XCircle, AlertCircle, Plug, Trash2, Zap, Building2, Info } from 'lucide-react';
 import { ETradeAuth } from '@/components/ETradeAuth';
+import { ETradeProductionAuth } from '@/components/ETradeProductionAuth';
 import { ManualDataEntry } from '@/components/ManualDataEntry';
 import { ETradeHardcodedSync } from '@/components/ETradeHardcodedSync';
 import { PlaidLink } from '@/components/PlaidLink';
@@ -16,6 +17,7 @@ import type { Account } from '@shared/schema';
 
 export default function ConnectAccounts() {
   const [showETradeAuth, setShowETradeAuth] = useState(false);
+  const [showETradeProductionAuth, setShowETradeProductionAuth] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [showHardcodedSync, setShowHardcodedSync] = useState(false);
   const [showPlaidLink, setShowPlaidLink] = useState(false);
@@ -159,6 +161,29 @@ export default function ConnectAccounts() {
           accountId={selectedAccountId}
           onSuccess={() => {
             setShowETradeAuth(false);
+            setSelectedAccountId(null);
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (showETradeProductionAuth && selectedAccountId) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="mb-6">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowETradeProductionAuth(false)}
+            className="mb-4"
+          >
+            ← Back to Accounts
+          </Button>
+        </div>
+        <ETradeProductionAuth 
+          accountId={selectedAccountId}
+          onSuccess={() => {
+            setShowETradeProductionAuth(false);
             setSelectedAccountId(null);
           }}
         />
