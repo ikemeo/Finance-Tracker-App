@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { RefreshCw, Plus, Settings, CheckCircle, XCircle, AlertCircle, Plug } from 'lucide-react';
+import { RefreshCw, Plus, Settings, CheckCircle, XCircle, AlertCircle, Plug, Trash2 } from 'lucide-react';
 import { ETradeAuth } from '@/components/ETradeAuth';
 import { ManualDataEntry } from '@/components/ManualDataEntry';
 import { apiRequestJson } from '@/lib/queryClient';
@@ -70,6 +70,30 @@ export default function ConnectAccounts() {
       toast({
         title: "Failed to Create Account",
         description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (accountId: number) => {
+      return apiRequestJson(`/api/accounts/${accountId}`, {
+        method: 'DELETE'
+      });
+    },
+    onSuccess: (data, accountId) => {
+      toast({
+        title: "Account Removed",
+        description: "Account has been disconnected and removed successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/holdings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/portfolio/summary'] });
+    },
+    onError: (error: any, accountId) => {
+      toast({
+        title: "Remove Failed",
+        description: error.message || "Failed to remove account. Please try again.",
         variant: "destructive",
       });
     }
@@ -229,6 +253,19 @@ export default function ConnectAccounts() {
                             title="Enter data manually"
                           >
                             <Settings className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to remove ${account.name}? This will delete all associated holdings and cannot be undone.`)) {
+                                deleteMutation.mutate(account.id);
+                              }
+                            }}
+                            disabled={deleteMutation.isPending}
+                            title="Remove account"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       ) : (

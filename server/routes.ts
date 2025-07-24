@@ -59,6 +59,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/accounts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const existingAccount = await storage.getAccount(id);
+      if (!existingAccount) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+
+      // Delete associated holdings first
+      const holdings = await storage.getHoldingsByAccount(id);
+      for (const holding of holdings) {
+        await storage.deleteHolding(holding.id!);
+      }
+
+      // Delete the account
+      await storage.deleteAccount(id);
+      res.json({ message: "Account deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete account" });
+    }
+  });
+
   app.post("/api/accounts", async (req, res) => {
     try {
       const accountData = insertAccountSchema.parse(req.body);

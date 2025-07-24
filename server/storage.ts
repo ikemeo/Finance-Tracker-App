@@ -326,6 +326,10 @@ export class MemStorage implements IStorage {
     return updatedAccount;
   }
 
+  async deleteAccount(id: number): Promise<void> {
+    this.accounts.delete(id);
+  }
+
   async getHoldings(): Promise<Holding[]> {
     return Array.from(this.holdings.values());
   }
@@ -348,6 +352,10 @@ export class MemStorage implements IStorage {
     const updatedHolding: Holding = { ...holding, ...updates };
     this.holdings.set(id, updatedHolding);
     return updatedHolding;
+  }
+
+  async deleteHolding(id: number): Promise<void> {
+    this.holdings.delete(id);
   }
 
   async getActivities(): Promise<Activity[]> {
