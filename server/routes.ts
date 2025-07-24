@@ -311,6 +311,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Account not found" });
       }
 
+      console.log(`Syncing account ${accountId} (${account.provider})`);
+      console.log(`Account connected: ${account.isConnected}`);
+      console.log(`Has access token: ${!!account.accessToken}`);
+
       let result;
       switch (account.provider) {
         case 'etrade':
@@ -322,6 +326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(result);
     } catch (error: any) {
+      console.error(`Sync error for account ${req.params.id}:`, error);
       res.status(500).json({ message: `Failed to sync account: ${error.message}` });
     }
   });

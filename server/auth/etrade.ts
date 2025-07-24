@@ -151,19 +151,29 @@ export class ETradeAuth {
     };
 
     try {
+      const oauthData = this.oauth.authorize(requestData, token);
+      const oauthHeaders = this.oauth.toHeader(oauthData);
+      
       const config = {
         method,
         url: fullUrl,
         headers: {
-          ...this.oauth.toHeader(this.oauth.authorize(requestData, token)),
+          'Authorization': oauthHeaders.Authorization,
           'Content-Type': 'application/json'
         },
         data: data || undefined
       };
 
-      const response = await axios(config);
+      console.log(`Making E*TRADE API request to: ${fullUrl}`);
+      console.log(`OAuth headers:`, oauthHeaders.Authorization);
+      
+      const response = await axios({
+        ...config,
+        timeout: 10000 // 10 second timeout
+      });
       return response.data;
     } catch (error: any) {
+      console.error(`E*TRADE API Error:`, error.response?.data || error.message);
       throw new Error(`API request failed: ${error.response?.data?.message || error.message}`);
     }
   }
