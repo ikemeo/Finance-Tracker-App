@@ -53,6 +53,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedAccount = await storage.updateAccount(id, updateData);
+      if (!updatedAccount) {
+        return res.status(404).json({ message: "Account not found" });
+      }
       res.json(updatedAccount);
     } catch (error) {
       res.status(500).json({ message: "Failed to update account" });
@@ -68,17 +71,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Account not found" });
       }
 
-      // Delete associated holdings first
+      // Delete associated data first (foreign key constraints)
       const holdings = await storage.getHoldingsByAccount(id);
       for (const holding of holdings) {
-        await storage.deleteHolding(holding.id!);
+        if (holding.id) {
+          await storage.deleteHolding(holding.id);
+        }
+      }
+
+      const activities = await storage.getActivitiesByAccount(id);
+      for (const activity of activities) {
+        if (activity.id) {
+          await storage.deleteActivity(activity.id);
+        }
       }
 
       // Delete the account
       await storage.deleteAccount(id);
       res.json({ message: "Account deleted successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete account" });
+    } catch (error: any) {
+      console.error('Delete account error:', error);
+      res.status(500).json({ message: "Failed to delete account", error: error?.message || String(error) });
     }
   });
 

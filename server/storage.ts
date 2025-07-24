@@ -24,17 +24,20 @@ export interface IStorage {
   getAccount(id: number): Promise<Account | undefined>;
   createAccount(account: InsertAccount): Promise<Account>;
   updateAccount(id: number, updates: Partial<InsertAccount>): Promise<Account | undefined>;
+  deleteAccount(id: number): Promise<void>;
   
   // Holding operations
   getHoldings(): Promise<Holding[]>;
   getHoldingsByAccount(accountId: number): Promise<Holding[]>;
   createHolding(holding: InsertHolding): Promise<Holding>;
   updateHolding(id: number, updates: Partial<InsertHolding>): Promise<Holding | undefined>;
+  deleteHolding(id: number): Promise<void>;
   
   // Activity operations
   getActivities(): Promise<Activity[]>;
   getActivitiesByAccount(accountId: number): Promise<Activity[]>;
   createActivity(activity: InsertActivity): Promise<Activity>;
+  deleteActivity(id: number): Promise<void>;
   
   // Real Estate operations
   getRealEstateInvestments(): Promise<RealEstateInvestment[]>;
@@ -358,6 +361,10 @@ export class MemStorage implements IStorage {
     this.holdings.delete(id);
   }
 
+  async deleteActivity(id: number): Promise<void> {
+    this.activities.delete(id);
+  }
+
   async getActivities(): Promise<Activity[]> {
     return Array.from(this.activities.values()).sort((a, b) => 
       new Date(b.timestamp!).getTime() - new Date(a.timestamp!).getTime()
@@ -486,6 +493,18 @@ export class DatabaseStorage implements IStorage {
       .where(eq(holdings.id, id))
       .returning();
     return updatedHolding || undefined;
+  }
+
+  async deleteAccount(id: number): Promise<void> {
+    await db.delete(accounts).where(eq(accounts.id, id));
+  }
+
+  async deleteHolding(id: number): Promise<void> {
+    await db.delete(holdings).where(eq(holdings.id, id));
+  }
+
+  async deleteActivity(id: number): Promise<void> {
+    await db.delete(activities).where(eq(activities.id, id));
   }
 
   // Activities operations
