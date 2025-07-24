@@ -138,6 +138,7 @@ export class ETradeAuth {
     data?: any
   ): Promise<any> {
     const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
+    console.log(`Building request for URL: ${fullUrl}`);
     
     const requestData = {
       url: fullUrl,
@@ -169,9 +170,16 @@ export class ETradeAuth {
       
       const response = await axios({
         ...config,
-        timeout: 10000 // 10 second timeout
+        timeout: 10000,
+        headers: {
+          ...config.headers,
+          'User-Agent': 'Portfolio Dashboard App/1.0',
+          'Accept': 'application/json'
+        }
       });
+      console.log(`E*TRADE API response status: ${response.status}`);
       return response.data;
+
     } catch (error: any) {
       console.error(`E*TRADE API Error:`, error.response?.data || error.message);
       throw new Error(`API request failed: ${error.response?.data?.message || error.message}`);
@@ -180,15 +188,18 @@ export class ETradeAuth {
 
   // E*TRADE specific API methods
   async getAccounts(accessToken: string, accessTokenSecret: string) {
-    return this.makeAuthenticatedRequest('/v1/account/list', 'GET', accessToken, accessTokenSecret);
+    console.log('Getting E*TRADE account list...');
+    return this.makeAuthenticatedRequest('/v1/account/list.json', 'GET', accessToken, accessTokenSecret);
   }
 
   async getAccountBalances(accountIdKey: string, accessToken: string, accessTokenSecret: string) {
-    return this.makeAuthenticatedRequest(`/v1/account/${accountIdKey}/balance`, 'GET', accessToken, accessTokenSecret);
+    console.log(`Getting E*TRADE account balances for ${accountIdKey}...`);
+    return this.makeAuthenticatedRequest(`/v1/account/${accountIdKey}/balance.json`, 'GET', accessToken, accessTokenSecret);
   }
 
   async getPortfolio(accountIdKey: string, accessToken: string, accessTokenSecret: string) {
-    return this.makeAuthenticatedRequest(`/v1/account/${accountIdKey}/portfolio`, 'GET', accessToken, accessTokenSecret);
+    console.log(`Getting E*TRADE portfolio for ${accountIdKey}...`);
+    return this.makeAuthenticatedRequest(`/v1/account/${accountIdKey}/portfolio.json`, 'GET', accessToken, accessTokenSecret);
   }
 
   async getTransactions(accountIdKey: string, accessToken: string, accessTokenSecret: string, startDate?: string, endDate?: string) {

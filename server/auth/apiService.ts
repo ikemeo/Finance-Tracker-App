@@ -71,6 +71,12 @@ export class ApiService {
     }
 
     try {
+      console.log(`Syncing E*TRADE account ${accountId} with tokens:`, {
+        hasAccessToken: !!account.accessToken,
+        hasRefreshToken: !!account.refreshToken,
+        tokenLength: account.accessToken?.length
+      });
+      
       // Get account list to find the correct account
       const accounts = await this.etradeAuth.getAccounts(account.accessToken, account.refreshToken);
       
