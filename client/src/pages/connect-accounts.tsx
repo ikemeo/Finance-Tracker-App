@@ -4,11 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { RefreshCw, Plus, Settings, CheckCircle, XCircle, AlertCircle, Plug, Trash2, Zap, Building2 } from 'lucide-react';
+import { RefreshCw, Plus, Settings, CheckCircle, XCircle, AlertCircle, Plug, Trash2, Zap, Building2, Info } from 'lucide-react';
 import { ETradeAuth } from '@/components/ETradeAuth';
 import { ManualDataEntry } from '@/components/ManualDataEntry';
 import { ETradeHardcodedSync } from '@/components/ETradeHardcodedSync';
 import { PlaidLink } from '@/components/PlaidLink';
+import { CredentialsSetup } from '@/components/CredentialsSetup';
 import { apiRequestJson } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import type { Account } from '@shared/schema';
@@ -18,6 +19,7 @@ export default function ConnectAccounts() {
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [showHardcodedSync, setShowHardcodedSync] = useState(false);
   const [showPlaidLink, setShowPlaidLink] = useState(false);
+  const [showCredentialsSetup, setShowCredentialsSetup] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -210,6 +212,23 @@ export default function ConnectAccounts() {
     );
   }
 
+  if (showCredentialsSetup) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="mb-6">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowCredentialsSetup(false)}
+            className="mb-4"
+          >
+            ← Back to Accounts
+          </Button>
+        </div>
+        <CredentialsSetup />
+      </div>
+    );
+  }
+
   if (showPlaidLink && selectedAccountId) {
     return (
       <div className="container mx-auto p-6">
@@ -235,11 +254,17 @@ export default function ConnectAccounts() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Connect Accounts</h1>
-        <p className="text-muted-foreground">
-          Connect your brokerage accounts to automatically sync your portfolio data.
-        </p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Connect Accounts</h1>
+          <p className="text-muted-foreground">
+            Connect your brokerage accounts to automatically sync your portfolio data.
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => setShowCredentialsSetup(true)}>
+          <Info className="h-4 w-4 mr-2" />
+          API Setup Guide
+        </Button>
       </div>
 
       <div className="grid gap-6">
