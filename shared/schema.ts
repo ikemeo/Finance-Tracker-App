@@ -34,6 +34,39 @@ export const activities = pgTable("activities", {
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
+export const realEstateInvestments = pgTable("real_estate_investments", {
+  id: serial("id").primaryKey(),
+  propertyName: text("property_name").notNull(),
+  propertyType: text("property_type").notNull(), // "residential", "commercial", "industrial", "land"
+  address: text("address").notNull(),
+  investmentDate: timestamp("investment_date").notNull(),
+  initialInvestment: decimal("initial_investment", { precision: 12, scale: 2 }).notNull(),
+  currentValue: decimal("current_value", { precision: 12, scale: 2 }).notNull(),
+  loanAmount: decimal("loan_amount", { precision: 12, scale: 2 }).default("0"),
+  interestRate: decimal("interest_rate", { precision: 5, scale: 2 }),
+  loanTerm: integer("loan_term"), // in months
+  monthlyRent: decimal("monthly_rent", { precision: 10, scale: 2 }),
+  monthlyPayment: decimal("monthly_payment", { precision: 10, scale: 2 }),
+  totalReturns: decimal("total_returns", { precision: 12, scale: 2 }).default("0"),
+  notes: text("notes"),
+});
+
+export const ventureInvestments = pgTable("venture_investments", {
+  id: serial("id").primaryKey(),
+  companyName: text("company_name").notNull(),
+  sector: text("sector").notNull(), // "tech", "healthcare", "fintech", "biotech", etc.
+  stage: text("stage").notNull(), // "pre-seed", "seed", "series-a", "series-b", etc.
+  investmentDate: timestamp("investment_date").notNull(),
+  investmentAmount: decimal("investment_amount", { precision: 12, scale: 2 }).notNull(),
+  currentValuation: decimal("current_valuation", { precision: 12, scale: 2 }),
+  ownershipPercentage: decimal("ownership_percentage", { precision: 5, scale: 2 }),
+  leadInvestor: text("lead_investor"),
+  exitDate: timestamp("exit_date"),
+  exitAmount: decimal("exit_amount", { precision: 12, scale: 2 }),
+  status: text("status").notNull().default("active"), // "active", "exited", "written-off"
+  notes: text("notes"),
+});
+
 export const insertAccountSchema = createInsertSchema(accounts).omit({
   id: true,
   lastSync: true,
@@ -48,9 +81,21 @@ export const insertActivitySchema = createInsertSchema(activities).omit({
   timestamp: true,
 });
 
+export const insertRealEstateSchema = createInsertSchema(realEstateInvestments).omit({
+  id: true,
+});
+
+export const insertVentureSchema = createInsertSchema(ventureInvestments).omit({
+  id: true,
+});
+
 export type Account = typeof accounts.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
 export type Holding = typeof holdings.$inferSelect;
 export type InsertHolding = z.infer<typeof insertHoldingSchema>;
 export type Activity = typeof activities.$inferSelect;
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
+export type RealEstateInvestment = typeof realEstateInvestments.$inferSelect;
+export type InsertRealEstate = z.infer<typeof insertRealEstateSchema>;
+export type VentureInvestment = typeof ventureInvestments.$inferSelect;
+export type InsertVenture = z.infer<typeof insertVentureSchema>;

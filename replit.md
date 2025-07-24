@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack portfolio dashboard application built with React, Express, and PostgreSQL. The application provides a comprehensive view of financial accounts, holdings, and activities across multiple investment providers (E*TRADE, Robinhood, Fidelity). It features a modern UI built with shadcn/ui components and Tailwind CSS, with real-time data visualization and portfolio analytics.
+This is a comprehensive full-stack portfolio dashboard application built with React, Express, and PostgreSQL. The application provides a complete view of financial portfolios including traditional brokerage accounts (E*TRADE, Robinhood, Fidelity), real estate investments, and venture/angel investments. It features a modern UI built with shadcn/ui components and Tailwind CSS, with real-time data visualization and comprehensive portfolio analytics across all asset classes.
 
 ## User Preferences
 
@@ -45,10 +45,12 @@ Currently, the application does not implement authentication. The API endpoints 
 ## Key Components
 
 ### Database Schema
-Three main entities:
+Five main entities:
 - **Accounts**: Financial account information (provider, type, balance, connection status)
 - **Holdings**: Individual investments within accounts (stocks, ETFs, crypto, bonds, cash)
 - **Activities**: Transaction and system events (buy/sell orders, syncs, errors)
+- **Real Estate Investments**: Property investments with details like purchase date, current value, loan terms, rental income, and ROI calculations
+- **Venture Investments**: Startup/angel investments tracking company details, investment stage, ownership percentage, current valuation, and exit information
 
 ### API Endpoints
 - `GET /api/accounts` - List all accounts
@@ -57,16 +59,27 @@ Three main entities:
 - `GET /api/holdings` - List all holdings
 - `GET /api/accounts/:id/holdings` - Get holdings for specific account
 - `GET /api/activities` - List all activities
+- `GET /api/real-estate` - List all real estate investments
+- `GET /api/real-estate/:id` - Get specific real estate investment
+- `POST /api/real-estate` - Create new real estate investment
+- `GET /api/venture` - List all venture investments
+- `GET /api/venture/:id` - Get specific venture investment
+- `POST /api/venture` - Create new venture investment
+- `GET /api/portfolio/summary` - Get comprehensive portfolio summary including all asset types
 - `POST /api/portfolio/refresh` - Refresh portfolio data
 
 ### Frontend Components
-- **Dashboard**: Main portfolio overview with summary cards and charts
+- **Dashboard**: Main portfolio overview with summary cards and charts covering all asset classes
 - **AccountCard**: Individual account balance and performance display
-- **PortfolioChart**: Pie chart showing asset allocation
-- **TopHoldings**: List of largest positions
+- **PortfolioChart**: Pie chart showing asset allocation including alternative investments
+- **TopHoldings**: List of largest positions from traditional accounts
 - **AccountPerformance**: Table showing account-level performance
 - **RecentActivity**: Feed of recent transactions and events
-- **Sidebar**: Navigation and account management
+- **Sidebar**: Navigation with links to all investment types
+- **RealEstateCard**: Detailed property investment card with ROI, rental income, and loan information
+- **VentureCard**: Startup investment card with valuation, ownership, and exit tracking
+- **RealEstatePage**: Dedicated page for managing property investments
+- **VenturePage**: Dedicated page for managing venture/angel investments
 
 ## Data Flow
 
@@ -115,3 +128,25 @@ The application uses optimistic updates and automatic refetching to keep the UI 
 - Build process automatically handles environment-specific optimizations
 
 The application is designed for deployment on platforms like Replit, with built-in support for development banners and runtime error overlays in development mode.
+
+## Recent Changes (January 2025)
+
+### Added Real Estate Investment Tracking
+- ✓ Created comprehensive real estate investment schema with property details, loan terms, and rental income
+- ✓ Built real estate investment card component with ROI calculations and property type badges
+- ✓ Added dedicated real estate page with grid layout for property management
+- ✓ Integrated real estate values into portfolio summary and allocation charts
+
+### Added Venture/Angel Investment Tracking  
+- ✓ Created venture investment schema tracking company details, investment stages, ownership, and exits
+- ✓ Built venture investment card component with current valuations and status tracking
+- ✓ Added dedicated venture page for managing startup investments
+- ✓ Integrated venture values into portfolio summary with exit tracking
+
+### Enhanced Portfolio Dashboard
+- ✓ Updated portfolio allocation chart to include real estate and venture categories
+- ✓ Expanded summary cards to show Traditional, Real Estate, Venture/Angel, and Crypto breakdowns
+- ✓ Enhanced sidebar navigation with dedicated pages for each investment type
+- ✓ Updated portfolio summary API to calculate total AUM across all asset classes
+
+The application now provides a complete view of diversified investment portfolios including traditional securities, real estate properties, and venture/angel investments with comprehensive tracking and analytics.

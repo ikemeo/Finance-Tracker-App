@@ -13,12 +13,17 @@ import {
   TrendingUp, 
   Layers, 
   Bitcoin, 
-  RefreshCw 
+  RefreshCw,
+  Home,
+  Target
 } from "lucide-react";
 import { type Account, type Holding, type Activity } from "@shared/schema";
 
 interface PortfolioSummary {
   totalAum: number;
+  traditionalAum: number;
+  realEstateValue: number;
+  ventureValue: number;
   categoryTotals: Record<string, number>;
   performanceData: Array<Account & { changePercent: string }>;
   lastUpdated: string;
@@ -134,7 +139,7 @@ export default function Dashboard() {
         <main className="flex-1 p-6">
           {/* AUM Overview Cards */}
           {summary && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
               <AccountCard
                 title="Total AUM"
                 value={summary.totalAum.toString()}
@@ -145,28 +150,37 @@ export default function Dashboard() {
                 positive={true}
               />
               <AccountCard
-                title="Stocks"
-                value={(summary.categoryTotals.stocks || 0).toString()}
+                title="Traditional"
+                value={summary.traditionalAum.toString()}
                 change="8.2"
-                percentage="62.0%"
+                percentage={`${((summary.traditionalAum / summary.totalAum) * 100).toFixed(1)}%`}
                 icon={<TrendingUp className="text-secondary text-xl" />}
                 iconBg="bg-secondary"
                 positive={true}
               />
               <AccountCard
-                title="ETFs"
-                value={(summary.categoryTotals.etfs || 0).toString()}
+                title="Real Estate"
+                value={summary.realEstateValue.toString()}
                 change="5.7"
-                percentage="22.0%"
-                icon={<Layers className="text-accent text-xl" />}
-                iconBg="bg-accent"
+                percentage={`${((summary.realEstateValue / summary.totalAum) * 100).toFixed(1)}%`}
+                icon={<Home className="text-amber-600 text-xl" />}
+                iconBg="bg-amber-100"
+                positive={true}
+              />
+              <AccountCard
+                title="Venture/Angel"
+                value={summary.ventureValue.toString()}
+                change="15.3"
+                percentage={`${((summary.ventureValue / summary.totalAum) * 100).toFixed(1)}%`}
+                icon={<Target className="text-purple-600 text-xl" />}
+                iconBg="bg-purple-100"
                 positive={true}
               />
               <AccountCard
                 title="Crypto"
                 value={(summary.categoryTotals.crypto || 0).toString()}
                 change="-3.1"
-                percentage="16.0%"
+                percentage={`${(((summary.categoryTotals.crypto || 0) / summary.totalAum) * 100).toFixed(1)}%`}
                 icon={<Bitcoin className="text-yellow-500 text-xl" />}
                 iconBg="bg-yellow-500"
                 positive={false}

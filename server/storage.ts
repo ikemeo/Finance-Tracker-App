@@ -1,4 +1,20 @@
-import { accounts, holdings, activities, type Account, type InsertAccount, type Holding, type InsertHolding, type Activity, type InsertActivity } from "@shared/schema";
+import { 
+  accounts, 
+  holdings, 
+  activities, 
+  realEstateInvestments,
+  ventureInvestments,
+  type Account, 
+  type InsertAccount, 
+  type Holding, 
+  type InsertHolding, 
+  type Activity, 
+  type InsertActivity,
+  type RealEstateInvestment,
+  type InsertRealEstate,
+  type VentureInvestment,
+  type InsertVenture
+} from "@shared/schema";
 
 export interface IStorage {
   // Account operations
@@ -17,23 +33,43 @@ export interface IStorage {
   getActivities(): Promise<Activity[]>;
   getActivitiesByAccount(accountId: number): Promise<Activity[]>;
   createActivity(activity: InsertActivity): Promise<Activity>;
+  
+  // Real Estate operations
+  getRealEstateInvestments(): Promise<RealEstateInvestment[]>;
+  getRealEstateInvestment(id: number): Promise<RealEstateInvestment | undefined>;
+  createRealEstateInvestment(investment: InsertRealEstate): Promise<RealEstateInvestment>;
+  updateRealEstateInvestment(id: number, updates: Partial<InsertRealEstate>): Promise<RealEstateInvestment | undefined>;
+  
+  // Venture operations
+  getVentureInvestments(): Promise<VentureInvestment[]>;
+  getVentureInvestment(id: number): Promise<VentureInvestment | undefined>;
+  createVentureInvestment(investment: InsertVenture): Promise<VentureInvestment>;
+  updateVentureInvestment(id: number, updates: Partial<InsertVenture>): Promise<VentureInvestment | undefined>;
 }
 
 export class MemStorage implements IStorage {
   private accounts: Map<number, Account>;
   private holdings: Map<number, Holding>;
   private activities: Map<number, Activity>;
+  private realEstateInvestments: Map<number, RealEstateInvestment>;
+  private ventureInvestments: Map<number, VentureInvestment>;
   private currentAccountId: number;
   private currentHoldingId: number;
   private currentActivityId: number;
+  private currentRealEstateId: number;
+  private currentVentureId: number;
 
   constructor() {
     this.accounts = new Map();
     this.holdings = new Map();
     this.activities = new Map();
+    this.realEstateInvestments = new Map();
+    this.ventureInvestments = new Map();
     this.currentAccountId = 1;
     this.currentHoldingId = 1;
     this.currentActivityId = 1;
+    this.currentRealEstateId = 1;
+    this.currentVentureId = 1;
 
     // Initialize with sample data
     this.initializeSampleData();
@@ -163,6 +199,96 @@ export class MemStorage implements IStorage {
       };
       this.activities.set(newActivity.id, newActivity);
     });
+
+    // Create sample real estate investments
+    const sampleRealEstate: Omit<RealEstateInvestment, 'id'>[] = [
+      {
+        propertyName: "Downtown Condo",
+        propertyType: "residential",
+        address: "123 Main St, San Francisco, CA 94105",
+        investmentDate: new Date('2022-03-15'),
+        initialInvestment: "650000.00",
+        currentValue: "720000.00",
+        loanAmount: "520000.00",
+        interestRate: "3.25",
+        loanTerm: 360,
+        monthlyRent: "4200.00",
+        monthlyPayment: "2260.00",
+        totalReturns: "23280.00",
+        notes: "Prime location, high rental demand"
+      },
+      {
+        propertyName: "Commercial Plaza",
+        propertyType: "commercial",
+        address: "456 Business Blvd, Austin, TX 78701",
+        investmentDate: new Date('2021-08-10'),
+        initialInvestment: "1200000.00",
+        currentValue: "1380000.00",
+        loanAmount: "900000.00",
+        interestRate: "4.15",
+        loanTerm: 300,
+        monthlyRent: "8500.00",
+        monthlyPayment: "4420.00",
+        totalReturns: "49080.00",
+        notes: "Multi-tenant retail space"
+      }
+    ];
+
+    sampleRealEstate.forEach(realEstate => {
+      const newRealEstate: RealEstateInvestment = { ...realEstate, id: this.currentRealEstateId++ };
+      this.realEstateInvestments.set(newRealEstate.id, newRealEstate);
+    });
+
+    // Create sample venture investments
+    const sampleVenture: Omit<VentureInvestment, 'id'>[] = [
+      {
+        companyName: "TechStart AI",
+        sector: "artificial-intelligence",
+        stage: "seed",
+        investmentDate: new Date('2023-01-20'),
+        investmentAmount: "50000.00",
+        currentValuation: "5000000.00",
+        ownershipPercentage: "1.25",
+        leadInvestor: "Andreessen Horowitz",
+        exitDate: null,
+        exitAmount: null,
+        status: "active",
+        notes: "AI-powered customer service platform"
+      },
+      {
+        companyName: "FinFlow",
+        sector: "fintech",
+        stage: "series-a",
+        investmentDate: new Date('2022-06-15'),
+        investmentAmount: "25000.00",
+        currentValuation: "15000000.00",
+        ownershipPercentage: "0.33",
+        leadInvestor: "Sequoia Capital",
+        exitDate: null,
+        exitAmount: null,
+        status: "active",
+        notes: "B2B payment processing solutions"
+      },
+      {
+        companyName: "HealthTrack",
+        sector: "healthcare",
+        stage: "pre-seed",
+        investmentDate: new Date('2021-11-05'),
+        investmentAmount: "15000.00",
+        currentValuation: "2000000.00",
+        ownershipPercentage: "1.50",
+        leadInvestor: "Y Combinator",
+        exitDate: new Date('2024-01-15'),
+        exitAmount: "45000.00",
+        status: "exited",
+        notes: "Wearable health monitoring - acquired by Apple"
+      }
+    ];
+
+    sampleVenture.forEach(venture => {
+      const newVenture: VentureInvestment = { ...venture, id: this.currentVentureId++ };
+      this.ventureInvestments.set(newVenture.id, newVenture);
+    });
   }
 
   async getAccounts(): Promise<Account[]> {
@@ -191,7 +317,8 @@ export class MemStorage implements IStorage {
     const updatedAccount: Account = { 
       ...account, 
       ...updates, 
-      lastSync: new Date() 
+      lastSync: new Date(),
+      isConnected: updates.isConnected ?? account.isConnected
     };
     this.accounts.set(id, updatedAccount);
     return updatedAccount;
@@ -238,10 +365,61 @@ export class MemStorage implements IStorage {
     const newActivity: Activity = { 
       ...activity, 
       id, 
-      timestamp: new Date() 
+      timestamp: new Date(),
+      symbol: activity.symbol ?? null
     };
     this.activities.set(id, newActivity);
     return newActivity;
+  }
+
+  // Real Estate Investment methods
+  async getRealEstateInvestments(): Promise<RealEstateInvestment[]> {
+    return Array.from(this.realEstateInvestments.values());
+  }
+
+  async getRealEstateInvestment(id: number): Promise<RealEstateInvestment | undefined> {
+    return this.realEstateInvestments.get(id);
+  }
+
+  async createRealEstateInvestment(investment: InsertRealEstate): Promise<RealEstateInvestment> {
+    const id = this.currentRealEstateId++;
+    const newInvestment: RealEstateInvestment = { ...investment, id };
+    this.realEstateInvestments.set(id, newInvestment);
+    return newInvestment;
+  }
+
+  async updateRealEstateInvestment(id: number, updates: Partial<InsertRealEstate>): Promise<RealEstateInvestment | undefined> {
+    const investment = this.realEstateInvestments.get(id);
+    if (!investment) return undefined;
+    
+    const updatedInvestment: RealEstateInvestment = { ...investment, ...updates };
+    this.realEstateInvestments.set(id, updatedInvestment);
+    return updatedInvestment;
+  }
+
+  // Venture Investment methods
+  async getVentureInvestments(): Promise<VentureInvestment[]> {
+    return Array.from(this.ventureInvestments.values());
+  }
+
+  async getVentureInvestment(id: number): Promise<VentureInvestment | undefined> {
+    return this.ventureInvestments.get(id);
+  }
+
+  async createVentureInvestment(investment: InsertVenture): Promise<VentureInvestment> {
+    const id = this.currentVentureId++;
+    const newInvestment: VentureInvestment = { ...investment, id };
+    this.ventureInvestments.set(id, newInvestment);
+    return newInvestment;
+  }
+
+  async updateVentureInvestment(id: number, updates: Partial<InsertVenture>): Promise<VentureInvestment | undefined> {
+    const investment = this.ventureInvestments.get(id);
+    if (!investment) return undefined;
+    
+    const updatedInvestment: VentureInvestment = { ...investment, ...updates };
+    this.ventureInvestments.set(id, updatedInvestment);
+    return updatedInvestment;
   }
 }
 

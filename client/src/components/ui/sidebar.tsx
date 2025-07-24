@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ChartPie, Building2, TrendingUp, Settings, Plus } from "lucide-react";
+import { ChartPie, Building2, TrendingUp, Settings, Plus, Home, Target } from "lucide-react";
+import { Link, useLocation } from "wouter";
 import { type Account } from "@shared/schema";
 
 interface SidebarProps {
@@ -35,6 +36,12 @@ const getProviderColor = (provider: string) => {
 };
 
 export default function Sidebar({ accounts, onAddAccount }: SidebarProps) {
+  const [location] = useLocation();
+
+  const isActive = (path: string) => {
+    return location === path;
+  };
+
   return (
     <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg">
       <div className="flex flex-col h-full">
@@ -45,22 +52,60 @@ export default function Sidebar({ accounts, onAddAccount }: SidebarProps) {
 
         {/* Navigation Menu */}
         <nav className="flex-1 px-4 py-6 space-y-2">
-          <Button
-            variant="ghost"
-            className="w-full justify-start bg-blue-50 text-primary hover:bg-blue-100"
-          >
-            <ChartPie className="mr-3 h-4 w-4" />
-            Dashboard
-          </Button>
-          <Button variant="ghost" className="w-full justify-start">
+          <Link href="/">
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start",
+                isActive("/") 
+                  ? "bg-blue-50 text-primary hover:bg-blue-100" 
+                  : "hover:bg-gray-50"
+              )}
+            >
+              <ChartPie className="mr-3 h-4 w-4" />
+              Dashboard
+            </Button>
+          </Link>
+          
+          <Link href="/real-estate">
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start",
+                isActive("/real-estate") 
+                  ? "bg-blue-50 text-primary hover:bg-blue-100" 
+                  : "hover:bg-gray-50"
+              )}
+            >
+              <Home className="mr-3 h-4 w-4" />
+              Real Estate
+            </Button>
+          </Link>
+          
+          <Link href="/venture">
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start",
+                isActive("/venture") 
+                  ? "bg-blue-50 text-primary hover:bg-blue-100" 
+                  : "hover:bg-gray-50"
+              )}
+            >
+              <Target className="mr-3 h-4 w-4" />
+              Venture / Angel
+            </Button>
+          </Link>
+          
+          <Button variant="ghost" className="w-full justify-start hover:bg-gray-50">
             <Building2 className="mr-3 h-4 w-4" />
             Accounts
           </Button>
-          <Button variant="ghost" className="w-full justify-start">
+          <Button variant="ghost" className="w-full justify-start hover:bg-gray-50">
             <TrendingUp className="mr-3 h-4 w-4" />
             Performance
           </Button>
-          <Button variant="ghost" className="w-full justify-start">
+          <Button variant="ghost" className="w-full justify-start hover:bg-gray-50">
             <Settings className="mr-3 h-4 w-4" />
             Settings
           </Button>

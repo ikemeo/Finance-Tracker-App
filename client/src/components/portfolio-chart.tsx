@@ -9,7 +9,9 @@ const COLORS = {
   etfs: "#2E7D32",
   crypto: "#F57C00",
   bonds: "#9C27B0",
-  cash: "#607D8B"
+  cash: "#607D8B",
+  "real-estate": "#8D6E63",
+  venture: "#7B1FA2"
 };
 
 const formatCurrency = (value: number) => {
