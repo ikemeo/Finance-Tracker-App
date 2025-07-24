@@ -9,16 +9,21 @@
 
 import { PlaidApi, Configuration, PlaidEnvironments, CountryCode, Products } from 'plaid';
 
-const PLAID_CLIENT_ID = process.env.PLAID_CLIENT_ID!;
-const PLAID_SECRET = process.env.PLAID_SECRET!;
+const PLAID_CLIENT_ID = process.env.PLAID_CLIENT_ID;
+const PLAID_SECRET = process.env.PLAID_SECRET;
 const PLAID_ENV = process.env.PLAID_ENV || 'sandbox'; // sandbox, development, production
+
+// Check if Plaid credentials are available
+if (!PLAID_CLIENT_ID || !PLAID_SECRET) {
+  console.warn('Plaid credentials not found. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.');
+}
 
 const configuration = new Configuration({
   basePath: PlaidEnvironments[PLAID_ENV as keyof typeof PlaidEnvironments],
   baseOptions: {
     headers: {
-      'PLAID-CLIENT-ID': PLAID_CLIENT_ID,
-      'PLAID-SECRET': PLAID_SECRET,
+      'PLAID-CLIENT-ID': PLAID_CLIENT_ID || '',
+      'PLAID-SECRET': PLAID_SECRET || '',
     },
   },
 });
@@ -64,6 +69,10 @@ export class PlaidService {
    * Create a Link token for Plaid Link initialization
    */
   async createLinkToken(userId: string): Promise<string> {
+    if (!PLAID_CLIENT_ID || !PLAID_SECRET) {
+      throw new Error('Plaid credentials not configured. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.');
+    }
+
     try {
       const response = await plaidClient.linkTokenCreate({
         user: { client_user_id: userId },
@@ -76,7 +85,7 @@ export class PlaidService {
       return response.data.link_token;
     } catch (error) {
       console.error('Plaid Link Token Error:', error);
-      throw new Error('Failed to create Plaid Link token');
+      throw new Error('Failed to create Plaid Link token. Please check your Plaid credentials.');
     }
   }
 

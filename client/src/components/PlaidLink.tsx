@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
+import { usePlaidLink } from 'react-plaid-link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +44,11 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Create link token on component mount
+  useEffect(() => {
+    linkTokenMutation.mutate();
+  }, []);
+
   // Create Plaid Link token
   const linkTokenMutation = useMutation({
     mutationFn: async () => {
@@ -55,11 +61,6 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
     onSuccess: (data) => {
       setLinkToken(data.linkToken);
       setConnectionStep('connecting');
-      // In a real implementation, you would initialize Plaid Link here
-      // For demo purposes, we'll simulate the connection
-      setTimeout(() => {
-        handlePlaidSuccess('public_token_demo_123');
-      }, 2000);
     },
     onError: (error: any) => {
       toast({
@@ -180,9 +181,27 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
     },
   });
 
-  const handlePlaidSuccess = useCallback((publicToken: string) => {
+  const handlePlaidSuccess = useCallback((publicToken: string, metadata: any) => {
+    console.log('Plaid success:', { publicToken, metadata });
     exchangeTokenMutation.mutate(publicToken);
   }, [exchangeTokenMutation]);
+
+  const handlePlaidExit = useCallback((err: any, metadata: any) => {
+    console.log('Plaid exit:', { err, metadata });
+    if (err) {
+      toast({
+        title: "Connection Failed",
+        description: err.message || "Failed to connect to your financial institution",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  const { open, ready } = usePlaidLink({
+    token: linkToken,
+    onSuccess: handlePlaidSuccess,
+    onExit: handlePlaidExit,
+  });
 
   const getAccountIcon = (type: string, subtype: string) => {
     if (type === 'investment' || subtype.includes('brokerage')) return <TrendingUp className="h-5 w-5" />;
@@ -253,8 +272,8 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
                 Plaid connects to over 12,000 financial institutions. Your credentials are encrypted and never stored.
               </p>
               <Button
-                onClick={() => linkTokenMutation.mutate()}
-                disabled={linkTokenMutation.isPending}
+                onClick={() => open()}
+                disabled={!ready || linkTokenMutation.isPending}
                 size="lg"
               >
                 {linkTokenMutation.isPending ? (
@@ -262,8 +281,21 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
                 ) : (
                   <Building2 className="h-4 w-4 mr-2" />
                 )}
-                Connect Account
+                {!ready ? 'Loading...' : 'Connect Account'}
               </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Connecting State */}
+        {connectionStep === 'connecting' && !ready && (
+          <div className="space-y-4">
+            <div className="text-center py-8">
+              <RefreshCw className="h-16 w-16 mx-auto text-blue-500 animate-spin mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Initializing Connection</h3>
+              <p className="text-muted-foreground">
+                Setting up secure connection to Plaid...
+              </p>
             </div>
           </div>
         )}
@@ -353,6 +385,15 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
 
         {/* Action Buttons */}
         <div className="flex gap-3">
+          {connectionStep === 'initial' && ready && (
+            <Button
+              onClick={() => open()}
+              disabled={!ready}
+            >
+              <Building2 className="h-4 w-4 mr-2" />
+              Open Plaid Link
+            </Button>
+          )}
           {connectionStep === 'connected' && selectedPlaidAccount && (
             <Button
               onClick={() => importDataMutation.mutate()}
