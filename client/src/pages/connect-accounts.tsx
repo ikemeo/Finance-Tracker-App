@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { RefreshCw, Plus, Settings, CheckCircle, XCircle, AlertCircle, Plug, Trash2 } from 'lucide-react';
+import { RefreshCw, Plus, Settings, CheckCircle, XCircle, AlertCircle, Plug, Trash2, Zap } from 'lucide-react';
 import { ETradeAuth } from '@/components/ETradeAuth';
 import { ManualDataEntry } from '@/components/ManualDataEntry';
+import { ETradeHardcodedSync } from '@/components/ETradeHardcodedSync';
 import { apiRequestJson } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import type { Account } from '@shared/schema';
@@ -14,6 +15,7 @@ import type { Account } from '@shared/schema';
 export default function ConnectAccounts() {
   const [showETradeAuth, setShowETradeAuth] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
+  const [showHardcodedSync, setShowHardcodedSync] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -183,6 +185,29 @@ export default function ConnectAccounts() {
     );
   }
 
+  if (showHardcodedSync && selectedAccountId) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="mb-6">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowHardcodedSync(false)}
+            className="mb-4"
+          >
+            ← Back to Accounts
+          </Button>
+        </div>
+        <ETradeHardcodedSync 
+          accountId={selectedAccountId}
+          onClose={() => {
+            setShowHardcodedSync(false);
+            setSelectedAccountId(null);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="mb-8">
@@ -243,6 +268,19 @@ export default function ConnectAccounts() {
                             <RefreshCw className={`h-4 w-4 mr-2 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
                             Sync
                           </Button>
+                          {account.provider === 'etrade' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedAccountId(account.id);
+                                setShowHardcodedSync(true);
+                              }}
+                              title="Import real E*TRADE data via API"
+                            >
+                              <Zap className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"

@@ -15,7 +15,7 @@ interface ManualDataEntryProps {
 export function ManualDataEntry({ accountId, onClose }: ManualDataEntryProps) {
   const [accountBalance, setAccountBalance] = useState('');
   const [holdings, setHoldings] = useState([
-    { symbol: '', name: '', shares: '', currentPrice: '', totalValue: '' }
+    { symbol: '', name: '', shares: '', currentPrice: '', totalValue: '', category: 'stocks' }
   ]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -29,7 +29,17 @@ export function ManualDataEntry({ accountId, onClose }: ManualDataEntryProps) {
         body: JSON.stringify({ balance: data.balance })
       });
 
-      // Update holdings
+      // Clear existing holdings for this account first
+      const existingHoldings = await apiRequest(`/api/accounts/${accountId}/holdings`);
+      for (const holding of existingHoldings) {
+        if (holding.id) {
+          await apiRequest(`/api/holdings/${holding.id}`, {
+            method: 'DELETE'
+          });
+        }
+      }
+
+      // Add new holdings
       for (const holding of data.holdings) {
         if (holding.symbol && holding.totalValue) {
           await apiRequest('/api/holdings', {
@@ -42,7 +52,7 @@ export function ManualDataEntry({ accountId, onClose }: ManualDataEntryProps) {
               shares: holding.shares || '0',
               currentPrice: holding.currentPrice || '0',
               totalValue: holding.totalValue,
-              category: 'stocks'
+              category: holding.category || 'stocks'
             })
           });
         }
@@ -68,7 +78,7 @@ export function ManualDataEntry({ accountId, onClose }: ManualDataEntryProps) {
   });
 
   const addHolding = () => {
-    setHoldings([...holdings, { symbol: '', name: '', shares: '', currentPrice: '', totalValue: '' }]);
+    setHoldings([...holdings, { symbol: '', name: '', shares: '', currentPrice: '', totalValue: '', category: 'stocks' }]);
   };
 
   const updateHolding = (index: number, field: string, value: string) => {

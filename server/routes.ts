@@ -125,6 +125,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/holdings", async (req, res) => {
+    try {
+      const holdingData = insertHoldingSchema.parse(req.body);
+      const holding = await storage.createHolding(holdingData);
+      res.status(201).json(holding);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid holding data" });
+    }
+  });
+
+  app.delete("/api/holdings/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteHolding(id);
+      res.json({ message: "Holding deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete holding" });
+    }
+  });
+
   // Activities routes
   app.get("/api/activities", async (req, res) => {
     try {
@@ -351,6 +371,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "E*TRADE account authenticated successfully" });
     } catch (error: any) {
       res.status(500).json({ message: `Failed to complete E*TRADE authentication: ${error.message}` });
+    }
+  });
+
+  // Hardcoded E*TRADE API endpoints
+  app.post("/api/etrade/test-connection", async (req, res) => {
+    try {
+      const { hardcodedETradeService } = await import('./auth/etradeHardcoded');
+      const result = await hardcodedETradeService.testConnection();
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  app.get("/api/etrade/accounts", async (req, res) => {
+    try {
+      const { hardcodedETradeService } = await import('./auth/etradeHardcoded');
+      const accounts = await hardcodedETradeService.getAccounts();
+      res.json(accounts);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/etrade/balance/:accountIdKey", async (req, res) => {
+    try {
+      const { accountIdKey } = req.params;
+      const { hardcodedETradeService } = await import('./auth/etradeHardcoded');
+      const balance = await hardcodedETradeService.getAccountBalance(accountIdKey);
+      res.json(balance);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/etrade/positions/:accountIdKey", async (req, res) => {
+    try {
+      const { accountIdKey } = req.params;
+      const { hardcodedETradeService } = await import('./auth/etradeHardcoded');
+      const positions = await hardcodedETradeService.getPortfolioPositions(accountIdKey);
+      res.json(positions);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
     }
   });
 
