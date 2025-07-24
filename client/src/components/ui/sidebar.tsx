@@ -97,10 +97,20 @@ export default function Sidebar({ accounts, onAddAccount }: SidebarProps) {
             </Button>
           </Link>
           
-          <Button variant="ghost" className="w-full justify-start hover:bg-gray-50">
-            <Building2 className="mr-3 h-4 w-4" />
-            Accounts
-          </Button>
+          <Link href="/connect">
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start",
+                isActive("/connect") 
+                  ? "bg-blue-50 text-primary hover:bg-blue-100" 
+                  : "hover:bg-gray-50"
+              )}
+            >
+              <Building2 className="mr-3 h-4 w-4" />
+              Connect Accounts
+            </Button>
+          </Link>
           <Button variant="ghost" className="w-full justify-start hover:bg-gray-50">
             <TrendingUp className="mr-3 h-4 w-4" />
             Performance

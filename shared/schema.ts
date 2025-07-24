@@ -10,6 +10,13 @@ export const accounts = pgTable("accounts", {
   balance: decimal("balance", { precision: 12, scale: 2 }).notNull(),
   isConnected: boolean("is_connected").notNull().default(true),
   lastSync: timestamp("last_sync").defaultNow(),
+  // Authentication fields
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  tokenExpiry: timestamp("token_expiry"),
+  // Provider-specific fields
+  accountIdKey: text("account_id_key"), // E*TRADE account key
+  externalAccountId: text("external_account_id"), // Provider's account ID
 });
 
 export const holdings = pgTable("holdings", {

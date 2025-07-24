@@ -8,8 +8,17 @@ import {
   insertRealEstateSchema,
   insertVentureSchema
 } from "@shared/schema";
+import { ApiService } from './auth/apiService';
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize API service with credentials
+  const apiService = new ApiService({
+    etrade: {
+      consumerKey: process.env.ETRADE_CONSUMER_KEY || '',
+      consumerSecret: process.env.ETRADE_CONSUMER_SECRET || '',
+      sandbox: true // Use sandbox for testing
+    }
+  });
   // Account routes
   app.get("/api/accounts", async (req, res) => {
     try {
@@ -240,6 +249,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Portfolio data refreshed successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to refresh portfolio data" });
+    }
+  });
+
+  // E*TRADE Authentication Routes
+  app.post("/api/auth/etrade/start", async (req, res) => {
+    try {
+      const { accountId } = req.body;
+      
+      if (!process.env.ETRADE_CONSUMER_KEY || !process.env.ETRADE_CONSUMER_SECRET) {
+        return res.status(400).json({ 
+          message: "E*TRADE API credentials not configured. Please set ETRADE_CONSUMER_KEY and ETRADE_CONSUMER_SECRET." 
+        });
+      }
+
+      const authData = await apiService.initiateETradeAuth();
+      
+      // Store the request token temporarily (in production, use a database or session)
+      // For now, we'll send it back to the client to handle
+      res.json({
+        authUrl: authData.authUrl,
+        requestToken: authData.token,
+        requestTokenSecret: authData.tokenSecret
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: `Failed to start E*TRADE authentication: ${error.message}` });
+    }
+  });
+
+  app.post("/api/auth/etrade/complete", async (req, res) => {
+    try {
+      const { accountId, requestToken, requestTokenSecret, verifier } = req.body;
+
+      if (!requestToken || !requestTokenSecret || !verifier) {
+        return res.status(400).json({ message: "Missing required authentication parameters" });
+      }
+
+      const tokens = await apiService.completeETradeAuth(requestToken, requestTokenSecret, verifier);
+      
+      // Update the account with the access tokens
+      await storage.updateAccount(parseInt(accountId), {
+        accessToken: tokens.token,
+        refreshToken: tokens.tokenSecret, // E*TRADE uses tokenSecret as refresh token
+        isConnected: true,
+        tokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+      });
+
+      res.json({ message: "E*TRADE account authenticated successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: `Failed to complete E*TRADE authentication: ${error.message}` });
+    }
+  });
+
+  // Account sync route
+  app.post("/api/accounts/:id/sync", async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.id);
+      const account = await storage.getAccount(accountId);
+      
+      if (!account) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+
+      let result;
+      switch (account.provider) {
+        case 'etrade':
+          result = await apiService.syncETradeAccount(accountId);
+          break;
+        default:
+          return res.status(400).json({ message: `Sync not supported for provider: ${account.provider}` });
+      }
+
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ message: `Failed to sync account: ${error.message}` });
     }
   });
 
