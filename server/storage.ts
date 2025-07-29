@@ -568,6 +568,13 @@ export class DatabaseStorage implements IStorage {
     return updatedInvestment || undefined;
   }
 
+  async deleteRealEstateInvestment(id: number): Promise<boolean> {
+    const result = await db
+      .delete(realEstateInvestments)
+      .where(eq(realEstateInvestments.id, id));
+    return result.rowCount > 0;
+  }
+
   // Venture Investment operations
   async getVentureInvestments(): Promise<VentureInvestment[]> {
     return await db.select().from(ventureInvestments);
