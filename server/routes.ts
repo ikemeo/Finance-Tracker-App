@@ -297,11 +297,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/venture", async (req, res) => {
     try {
-      const investmentData = insertVentureSchema.parse(req.body);
+      // Convert string dates to Date objects for validation
+      const processedBody = { ...req.body };
+      if (processedBody.investmentDate && typeof processedBody.investmentDate === 'string') {
+        processedBody.investmentDate = new Date(processedBody.investmentDate);
+      }
+      if (processedBody.exitDate && typeof processedBody.exitDate === 'string') {
+        processedBody.exitDate = new Date(processedBody.exitDate);
+      }
+      
+      const investmentData = insertVentureSchema.parse(processedBody);
       const investment = await storage.createVentureInvestment(investmentData);
       res.status(201).json(investment);
     } catch (error) {
-      res.status(400).json({ message: "Invalid venture investment data" });
+      console.error("POST /api/venture - Error:", error);
+      res.status(400).json({ message: "Invalid venture investment data", error: error.message });
     }
   });
 

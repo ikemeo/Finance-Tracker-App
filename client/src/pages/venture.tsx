@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import VentureCard from "@/components/venture-card";
 import { VentureEditDialog } from "@/components/VentureEditDialog";
+import { VentureAddDialog } from "@/components/VentureAddDialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { type VentureInvestment } from "@shared/schema";
 
 export default function VenturePage() {
   const [editingInvestment, setEditingInvestment] = useState<VentureInvestment | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -41,8 +43,7 @@ export default function VenturePage() {
   });
 
   const handleAddInvestment = () => {
-    // TODO: Open add investment dialog
-    console.log("Add investment clicked");
+    setShowAddDialog(true);
   };
 
   const handleEditInvestment = (investment: VentureInvestment) => {
@@ -113,6 +114,12 @@ export default function VenturePage() {
             ))}
           </div>
         )}
+
+        {/* Add Dialog */}
+        <VentureAddDialog
+          open={showAddDialog}
+          onOpenChange={setShowAddDialog}
+        />
 
         {/* Edit Dialog */}
         {editingInvestment && (
