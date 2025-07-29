@@ -88,17 +88,17 @@ export function VentureEditDialog({ investment, open, onOpenChange }: VentureEdi
 
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      // Convert form data to API format
-      const formattedData: Partial<InsertVenture> = {
+      // Convert form data to API format - keep dates as strings for JSON serialization
+      const formattedData: any = {
         companyName: data.companyName,
         sector: data.sector,
         stage: data.stage,
-        investmentDate: new Date(data.investmentDate),
+        investmentDate: data.investmentDate, // Keep as string
         investmentAmount: data.investmentAmount,
         currentValuation: data.currentValuation || null,
         ownershipPercentage: data.ownershipPercentage && data.ownershipPercentage.trim() !== '' ? data.ownershipPercentage : null,
         leadInvestor: data.leadInvestor || null,
-        exitDate: data.exitDate ? new Date(data.exitDate) : null,
+        exitDate: data.exitDate || null, // Keep as string
         exitAmount: data.exitAmount || null,
         status: data.status,
         notes: data.notes || null,

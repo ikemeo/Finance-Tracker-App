@@ -308,9 +308,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/venture/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      console.log("PATCH /api/venture/:id - Request body:", JSON.stringify(req.body, null, 2));
-      const updateData = insertVentureSchema.partial().parse(req.body);
-      console.log("PATCH /api/venture/:id - Parsed data:", JSON.stringify(updateData, null, 2));
+      
+      // Convert string dates to Date objects for validation
+      const processedBody = { ...req.body };
+      if (processedBody.investmentDate && typeof processedBody.investmentDate === 'string') {
+        processedBody.investmentDate = new Date(processedBody.investmentDate);
+      }
+      if (processedBody.exitDate && typeof processedBody.exitDate === 'string') {
+        processedBody.exitDate = new Date(processedBody.exitDate);
+      }
+      
+      const updateData = insertVentureSchema.partial().parse(processedBody);
       const investment = await storage.updateVentureInvestment(id, updateData);
       if (!investment) {
         return res.status(404).json({ message: "Venture investment not found" });
