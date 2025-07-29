@@ -11,7 +11,7 @@ import { PlaidApi, Configuration, PlaidEnvironments, CountryCode, Products } fro
 
 const PLAID_CLIENT_ID = process.env.PLAID_CLIENT_ID;
 const PLAID_SECRET = process.env.PLAID_SECRET;
-const PLAID_ENV = process.env.PLAID_ENV || 'development'; // sandbox, development, production
+const PLAID_ENV = process.env.PLAID_ENV || 'production'; // sandbox, development, production
 
 // Check if Plaid credentials are available
 if (!PLAID_CLIENT_ID || !PLAID_SECRET) {
@@ -73,8 +73,8 @@ export class PlaidService {
       throw new Error('Plaid credentials not configured. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.');
     }
 
-    // Try different environments to find the correct one for the credentials
-    const environments = ['development', 'sandbox', 'production'];
+    // Try production first since user has production access, then fallback to others
+    const environments = ['production', 'development', 'sandbox'];
     let lastError: any;
 
     for (const env of environments) {
