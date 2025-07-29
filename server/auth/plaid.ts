@@ -73,25 +73,22 @@ export class PlaidService {
       throw new Error('Plaid credentials not configured. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.');
     }
 
-    // Try multiple environments since credentials worked recently
-    const environments = ['sandbox', 'development', 'production'];
-    let lastError: any;
-
-    for (const env of environments) {
-      try {
-        console.log(`🔧 Trying Plaid ${env} environment`);
-        
-        const config = new Configuration({
-          basePath: PlaidEnvironments[env as keyof typeof PlaidEnvironments],
-          baseOptions: {
-            headers: {
-              'PLAID-CLIENT-ID': PLAID_CLIENT_ID,
-              'PLAID-SECRET': PLAID_SECRET,
-            },
+    // Use development environment since we know it works
+    const targetEnvironment = 'development';
+    console.log(`🔧 Using Plaid ${targetEnvironment} environment`);
+    
+    try {
+      const config = new Configuration({
+        basePath: PlaidEnvironments[targetEnvironment as keyof typeof PlaidEnvironments],
+        baseOptions: {
+          headers: {
+            'PLAID-CLIENT-ID': PLAID_CLIENT_ID,
+            'PLAID-SECRET': PLAID_SECRET,
           },
-        });
+        },
+      });
 
-        const client = new PlaidApi(config);
+      const client = new PlaidApi(config);
         // Configuration with proper redirect URI for Replit
         const domain = process.env.REPLIT_DEV_DOMAIN || process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000';
         const redirectUri = `https://${domain}/api/plaid/oauth-redirect`;
@@ -106,36 +103,31 @@ export class PlaidService {
           redirect_uri: redirectUri
         };
 
-        const response = await Promise.race([
-          client.linkTokenCreate(linkTokenConfig),
-          // 30 second timeout
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Connection timeout - Plaid is taking longer than expected')), 30000)
-          )
-        ]);
+      const response = await Promise.race([
+        client.linkTokenCreate(linkTokenConfig),
+        // 10 second timeout for faster response
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Connection timeout - Plaid is taking longer than expected')), 10000)
+        )
+      ]);
 
-        console.log(`✅ Plaid Link token created successfully using ${env} environment`);
-        return (response as any).data.link_token;
-      } catch (error: any) {
-        console.log(`❌ Failed with ${env} environment:`, error.response?.data?.error_code || error.message);
-        lastError = error;
-        continue;
-      }
-    }
-
-    console.error('❌ All Plaid environments failed. Last error:', lastError.response?.data || lastError.message);
+      console.log(`✅ Plaid Link token created successfully using ${targetEnvironment} environment`);
+      return (response as any).data.link_token;
+    } catch (error: any) {
+      console.error(`❌ Plaid Link token creation failed:`, error.response?.data || error.message);
       
-    // Provide more helpful error message
-    const errorCode = lastError.response?.data?.error_code;
-    if (errorCode === 'INVALID_API_KEYS') {
-      throw new Error(`PLAID_CREDENTIALS_INVALID: The provided Plaid credentials are invalid across all environments. Since they worked 15 minutes ago, they may have expired or been revoked. Please check your Plaid Dashboard for fresh credentials.`);
+      // Provide helpful error message
+      const errorCode = error.response?.data?.error_code;
+      if (errorCode === 'INVALID_API_KEYS') {
+        throw new Error(`PLAID_CREDENTIALS_INVALID: The provided Plaid credentials are invalid. Please check your Plaid Dashboard for fresh credentials.`);
+      }
+      
+      if (errorCode === 'INVALID_FIELD') {
+        throw new Error(`PLAID_CREDENTIALS_INVALID: Configuration error. Please verify redirect URI is configured in Plaid Dashboard.`);
+      }
+      
+      throw new Error(`Failed to create Plaid Link token: ${error.response?.data?.error_message || error.message}`);
     }
-    
-    if (errorCode === 'INVALID_FIELD') {
-      throw new Error(`PLAID_CREDENTIALS_INVALID: Configuration error detected. This was the account_filters issue you saw in your dashboard logs.`);
-    }
-    
-    throw new Error(`Failed to create Plaid Link token across all environments: ${lastError.response?.data?.error_message || lastError.message}`);
   }
 
   /**

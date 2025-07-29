@@ -294,7 +294,7 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
               {linkTokenMutation.isPending && (
                 <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                   <p className="text-sm text-blue-700">
-                    Initializing secure connection... This may take 10-15 seconds in production
+                    Initializing secure connection... Usually takes 2-3 seconds
                   </p>
                 </div>
               )}
@@ -312,7 +312,7 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
               </Button>
               {linkTokenMutation.isPending && (
                 <p className="text-xs text-gray-500 mt-2">
-                  Using production environment for real bank connections
+                  Connecting to 12,000+ financial institutions
                 </p>
               )}
             </div>
