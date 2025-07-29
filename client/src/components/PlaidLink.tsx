@@ -40,7 +40,7 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
   const [selectedPlaidAccount, setSelectedPlaidAccount] = useState<string>('');
   const [linkToken, setLinkToken] = useState<string>('');
   const [accessToken, setAccessToken] = useState<string>('');
-  const [connectionStep, setConnectionStep] = useState<'initial' | 'connecting' | 'connected' | 'selecting'>('initial');
+  const [connectionStep, setConnectionStep] = useState<'initial' | 'connecting' | 'connected' | 'selecting' | 'invalid-credentials'>('initial');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -73,14 +73,21 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
       setConnectionStep('connecting');
     },
     onError: (error: any) => {
-      const isCredentialError = error.message.includes('Invalid Plaid credentials');
-      toast({
-        title: isCredentialError ? "Credential Issue" : "Connection Failed",
-        description: isCredentialError 
-          ? "Plaid credentials need to be updated. Please check your Client ID and Secret."
-          : error.message || "Failed to initialize Plaid Link",
-        variant: "destructive",
-      });
+      const isCredentialError = error.message.includes('PLAID_CREDENTIALS_INVALID');
+      if (isCredentialError) {
+        setConnectionStep('invalid-credentials');
+        toast({
+          title: "Plaid Credentials Invalid",
+          description: "Please update your Plaid credentials to connect to financial institutions.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Connection Failed",
+          description: error.message || "Failed to initialize Plaid Link",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -308,6 +315,32 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
                   Using production environment for real bank connections
                 </p>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Invalid Credentials State */}
+        {connectionStep === 'invalid-credentials' && (
+          <div className="space-y-4">
+            <div className="text-center py-8">
+              <AlertCircle className="h-16 w-16 mx-auto text-red-500 mb-4" />
+              <h3 className="text-lg font-semibold mb-2 text-red-700">Plaid Credentials Invalid</h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Your Plaid API credentials are invalid or expired. Please update them in your Plaid Dashboard.
+              </p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 text-left max-w-md mx-auto">
+                <h4 className="font-medium text-yellow-800 mb-2">To fix this:</h4>
+                <ol className="text-sm text-yellow-700 space-y-1">
+                  <li>1. Go to https://plaid.com/</li>
+                  <li>2. Log into your dashboard</li>
+                  <li>3. Navigate to "Keys" section</li>
+                  <li>4. Copy fresh Client ID and Secret</li>
+                  <li>5. Update your Replit Secrets</li>
+                </ol>
+              </div>
+              <Button variant="outline" onClick={onClose}>
+                Close
+              </Button>
             </div>
           </div>
         )}

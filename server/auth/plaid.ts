@@ -95,23 +95,19 @@ export class PlaidService {
       });
 
       const client = new PlaidApi(config);
+        // Try with minimal configuration first for sandbox
+        const linkTokenConfig = {
+          user: { client_user_id: userId },
+          client_name: 'Portfolio Dashboard',
+          products: targetEnvironment === 'sandbox' 
+            ? [Products.Transactions] // Sandbox usually requires basic products first
+            : [Products.Assets, Products.Investments, Products.Transactions],
+          country_codes: [CountryCode.Us],
+          language: 'en' as const
+        };
+
         const response = await Promise.race([
-          client.linkTokenCreate({
-            user: { client_user_id: userId },
-            client_name: 'Portfolio Dashboard',
-            products: [Products.Assets, Products.Investments, Products.Transactions],
-            country_codes: [CountryCode.Us],
-            language: 'en',
-            // Optimize for investment accounts
-            account_filters: {
-              investment: {
-                account_subtypes: ['brokerage', 'ira', 'roth', '401k', '403b', 'pension', 'mutual fund', 'investment']
-              },
-              depository: {
-                account_subtypes: ['checking', 'savings', 'money market', 'cd']
-              }
-            }
-          }),
+          client.linkTokenCreate(linkTokenConfig),
           // 30 second timeout
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Connection timeout - Plaid is taking longer than expected')), 30000)
@@ -126,7 +122,11 @@ export class PlaidService {
       // Provide more helpful error message
       const errorCode = error.response?.data?.error_code;
       if (errorCode === 'INVALID_API_KEYS') {
-        throw new Error(`Invalid Plaid credentials for ${targetEnvironment} environment. Please verify your PLAID_CLIENT_ID and PLAID_SECRET are correct.`);
+        throw new Error(`PLAID_CREDENTIALS_INVALID: The provided Plaid credentials are invalid or expired. Please update your PLAID_CLIENT_ID and PLAID_SECRET with valid credentials from your Plaid Dashboard.`);
+      }
+      
+      if (errorCode === 'INVALID_FIELD') {
+        throw new Error(`PLAID_CREDENTIALS_INVALID: The provided Plaid credentials appear to be for a different environment or are malformed. Please verify your PLAID_CLIENT_ID and PLAID_SECRET are correct.`);
       }
       
       throw new Error(`Failed to create Plaid Link token: ${error.response?.data?.error_message || error.message}`);
