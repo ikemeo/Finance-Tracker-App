@@ -49,12 +49,18 @@ export function VentureEditDialog({ investment, open, onOpenChange }: VentureEdi
       companyName: investment.companyName,
       sector: investment.sector,
       stage: investment.stage,
-      investmentDate: investment.investmentDate.toISOString().split('T')[0],
+      investmentDate: investment.investmentDate instanceof Date 
+        ? investment.investmentDate.toISOString().split('T')[0]
+        : new Date(investment.investmentDate).toISOString().split('T')[0],
       investmentAmount: investment.investmentAmount,
       currentValuation: investment.currentValuation,
       ownershipPercentage: investment.ownershipPercentage,
       leadInvestor: investment.leadInvestor || '',
-      exitDate: investment.exitDate ? investment.exitDate.toISOString().split('T')[0] : undefined,
+      exitDate: investment.exitDate 
+        ? (investment.exitDate instanceof Date 
+            ? investment.exitDate.toISOString().split('T')[0]
+            : new Date(investment.exitDate).toISOString().split('T')[0])
+        : undefined,
       exitAmount: investment.exitAmount || undefined,
       status: investment.status,
       notes: investment.notes || '',
@@ -63,10 +69,16 @@ export function VentureEditDialog({ investment, open, onOpenChange }: VentureEdi
 
   const updateMutation = useMutation({
     mutationFn: async (data: InsertVenture) => {
+      // Convert date strings back to Date objects for the API
+      const formattedData = {
+        ...data,
+        investmentDate: new Date(data.investmentDate),
+        exitDate: data.exitDate ? new Date(data.exitDate) : undefined,
+      };
       return apiRequest(`/api/venture/${investment.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(formattedData),
       });
     },
     onSuccess: () => {
