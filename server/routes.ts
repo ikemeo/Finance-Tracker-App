@@ -305,6 +305,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/venture/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = insertVentureSchema.partial().parse(req.body);
+      const investment = await storage.updateVentureInvestment(id, updateData);
+      if (!investment) {
+        return res.status(404).json({ message: "Venture investment not found" });
+      }
+      res.json(investment);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid venture investment data" });
+    }
+  });
+
+  app.delete("/api/venture/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteVentureInvestment(id);
+      if (!success) {
+        return res.status(404).json({ message: "Venture investment not found" });
+      }
+      res.json({ message: "Venture investment deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete venture investment" });
+    }
+  });
+
   // Refresh data endpoint (simulate API calls)
   app.post("/api/portfolio/refresh", async (req, res) => {
     try {

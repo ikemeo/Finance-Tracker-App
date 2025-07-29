@@ -1,12 +1,43 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import VentureCard from "@/components/venture-card";
+import { VentureEditDialog } from "@/components/VentureEditDialog";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { type VentureInvestment } from "@shared/schema";
 
 export default function VenturePage() {
+  const [editingInvestment, setEditingInvestment] = useState<VentureInvestment | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const { data: investments = [], isLoading } = useQuery<VentureInvestment[]>({
     queryKey: ["/api/venture"],
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/venture/${id}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Investment Deleted",
+        description: "Your venture investment has been successfully deleted.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/venture'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/portfolio/summary'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Failed to delete venture investment.",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleAddInvestment = () => {
@@ -15,8 +46,13 @@ export default function VenturePage() {
   };
 
   const handleEditInvestment = (investment: VentureInvestment) => {
-    // TODO: Open edit investment dialog
-    console.log("Edit investment:", investment);
+    setEditingInvestment(investment);
+  };
+
+  const handleDeleteInvestment = (investment: VentureInvestment) => {
+    if (window.confirm(`Are you sure you want to delete the investment in ${investment.companyName}? This action cannot be undone.`)) {
+      deleteMutation.mutate(investment.id);
+    }
   };
 
   if (isLoading) {
@@ -72,9 +108,21 @@ export default function VenturePage() {
                 key={investment.id}
                 investment={investment}
                 onEdit={handleEditInvestment}
+                onDelete={handleDeleteInvestment}
               />
             ))}
           </div>
+        )}
+
+        {/* Edit Dialog */}
+        {editingInvestment && (
+          <VentureEditDialog
+            investment={editingInvestment}
+            open={!!editingInvestment}
+            onOpenChange={(open) => {
+              if (!open) setEditingInvestment(null);
+            }}
+          />
         )}
       </div>
     </div>

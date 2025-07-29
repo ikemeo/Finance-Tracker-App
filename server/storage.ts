@@ -50,6 +50,7 @@ export interface IStorage {
   getVentureInvestment(id: number): Promise<VentureInvestment | undefined>;
   createVentureInvestment(investment: InsertVenture): Promise<VentureInvestment>;
   updateVentureInvestment(id: number, updates: Partial<InsertVenture>): Promise<VentureInvestment | undefined>;
+  deleteVentureInvestment(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -438,6 +439,10 @@ export class MemStorage implements IStorage {
     this.ventureInvestments.set(id, updatedInvestment);
     return updatedInvestment;
   }
+
+  async deleteVentureInvestment(id: number): Promise<boolean> {
+    return this.ventureInvestments.delete(id);
+  }
 }
 
 // Database Storage Implementation
@@ -586,6 +591,13 @@ export class DatabaseStorage implements IStorage {
       .where(eq(ventureInvestments.id, id))
       .returning();
     return updatedInvestment || undefined;
+  }
+
+  async deleteVentureInvestment(id: number): Promise<boolean> {
+    const result = await db
+      .delete(ventureInvestments)
+      .where(eq(ventureInvestments.id, id));
+    return result.rowCount > 0;
   }
 }
 

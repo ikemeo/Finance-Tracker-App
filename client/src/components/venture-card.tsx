@@ -2,12 +2,13 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type VentureInvestment } from "@shared/schema";
-import { TrendingUp, Building2, Calendar, Target, ExternalLink } from "lucide-react";
+import { TrendingUp, Building2, Calendar, Target, ExternalLink, Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 
 interface VentureCardProps {
   investment: VentureInvestment;
   onEdit?: (investment: VentureInvestment) => void;
+  onDelete?: (investment: VentureInvestment) => void;
 }
 
 const formatCurrency = (value: string | null) => {
@@ -64,7 +65,7 @@ const getStageColor = (stage: string) => {
   }
 };
 
-export default function VentureCard({ investment, onEdit }: VentureCardProps) {
+export default function VentureCard({ investment, onEdit, onDelete }: VentureCardProps) {
   const currentValue = calculateCurrentValue(investment);
   const roi = calculateROI(investment);
   const isPositive = parseFloat(roi) >= 0;
@@ -153,11 +154,20 @@ export default function VentureCard({ investment, onEdit }: VentureCardProps) {
           <Calendar className="w-4 h-4 mr-1" />
           Invested {format(new Date(investment.investmentDate), 'MMM yyyy')}
         </div>
-        {onEdit && (
-          <Button variant="outline" size="sm" onClick={() => onEdit(investment)}>
-            Edit
-          </Button>
-        )}
+        <div className="flex space-x-2">
+          {onEdit && (
+            <Button variant="outline" size="sm" onClick={() => onEdit(investment)}>
+              <Edit className="w-4 h-4 mr-1" />
+              Edit
+            </Button>
+          )}
+          {onDelete && (
+            <Button variant="destructive" size="sm" onClick={() => onDelete(investment)}>
+              <Trash2 className="w-4 h-4 mr-1" />
+              Delete
+            </Button>
+          )}
+        </div>
       </div>
 
       {investment.notes && (
