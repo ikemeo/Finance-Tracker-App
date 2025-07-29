@@ -14,12 +14,22 @@ interface VentureCardProps {
 const formatCurrency = (value: string | null) => {
   if (!value) return "$0";
   const num = parseFloat(value);
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    notation: "compact",
-    maximumFractionDigits: 0,
-  }).format(num);
+  
+  // Use compact notation only for values >= 1 million to avoid rounding smaller amounts
+  if (num >= 1000000) {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(num);
+  } else {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(num);
+  }
 };
 
 const calculateCurrentValue = (investment: VentureInvestment) => {
