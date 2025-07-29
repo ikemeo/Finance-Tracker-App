@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { insertVentureSchema, type VentureInvestment, type InsertVenture } from '@shared/schema';
+import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,24 @@ import {
 } from '@/components/ui/select';
 import { RefreshCw } from 'lucide-react';
 
+// Form schema with string dates for HTML inputs
+const formSchema = z.object({
+  companyName: z.string().min(1, "Company name is required"),
+  sector: z.string().min(1, "Sector is required"),
+  stage: z.string().min(1, "Stage is required"),
+  investmentDate: z.string().min(1, "Investment date is required"),
+  investmentAmount: z.string().min(1, "Investment amount is required"),
+  currentValuation: z.string().optional(),
+  ownershipPercentage: z.string().optional(),
+  leadInvestor: z.string().optional(),
+  exitDate: z.string().optional(),
+  exitAmount: z.string().optional(),
+  status: z.string().min(1, "Status is required"),
+  notes: z.string().optional(),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
 interface VentureEditDialogProps {
   investment: VentureInvestment;
   open: boolean;
@@ -43,8 +62,8 @@ export function VentureEditDialog({ investment, open, onOpenChange }: VentureEdi
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<InsertVenture>({
-    resolver: zodResolver(insertVentureSchema),
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       companyName: investment.companyName,
       sector: investment.sector,
@@ -53,27 +72,36 @@ export function VentureEditDialog({ investment, open, onOpenChange }: VentureEdi
         ? investment.investmentDate.toISOString().split('T')[0]
         : new Date(investment.investmentDate).toISOString().split('T')[0],
       investmentAmount: investment.investmentAmount,
-      currentValuation: investment.currentValuation,
-      ownershipPercentage: investment.ownershipPercentage,
+      currentValuation: investment.currentValuation || '',
+      ownershipPercentage: investment.ownershipPercentage || '',
       leadInvestor: investment.leadInvestor || '',
       exitDate: investment.exitDate 
         ? (investment.exitDate instanceof Date 
             ? investment.exitDate.toISOString().split('T')[0]
             : new Date(investment.exitDate).toISOString().split('T')[0])
-        : undefined,
-      exitAmount: investment.exitAmount || undefined,
+        : '',
+      exitAmount: investment.exitAmount || '',
       status: investment.status,
       notes: investment.notes || '',
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: InsertVenture) => {
-      // Convert date strings back to Date objects for the API
-      const formattedData = {
-        ...data,
+    mutationFn: async (data: FormData) => {
+      // Convert form data to API format
+      const formattedData: Partial<InsertVenture> = {
+        companyName: data.companyName,
+        sector: data.sector,
+        stage: data.stage,
         investmentDate: new Date(data.investmentDate),
-        exitDate: data.exitDate ? new Date(data.exitDate) : undefined,
+        investmentAmount: data.investmentAmount,
+        currentValuation: data.currentValuation || null,
+        ownershipPercentage: data.ownershipPercentage || null,
+        leadInvestor: data.leadInvestor || null,
+        exitDate: data.exitDate ? new Date(data.exitDate) : null,
+        exitAmount: data.exitAmount || null,
+        status: data.status,
+        notes: data.notes || null,
       };
       return apiRequest(`/api/venture/${investment.id}`, {
         method: 'PATCH',
@@ -99,7 +127,7 @@ export function VentureEditDialog({ investment, open, onOpenChange }: VentureEdi
     },
   });
 
-  const onSubmit = (data: InsertVenture) => {
+  const onSubmit = (data: FormData) => {
     updateMutation.mutate(data);
   };
 
