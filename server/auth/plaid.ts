@@ -73,37 +73,37 @@ export class PlaidService {
       throw new Error('Plaid credentials not configured. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.');
     }
 
-    // Determine environment based on credentials - sandbox keys are different format
-    let targetEnvironment = 'sandbox';
-    if (PLAID_CLIENT_ID.length > 24 && PLAID_SECRET.length > 30) {
-      targetEnvironment = 'production';
-    } else if (PLAID_CLIENT_ID.startsWith('5') || PLAID_CLIENT_ID.startsWith('6')) {
-      targetEnvironment = 'sandbox';
-    }
+    // Try multiple environments since credentials worked recently
+    const environments = ['sandbox', 'development', 'production'];
+    let lastError: any;
 
-    console.log(`🔧 Using Plaid ${targetEnvironment} environment based on credential format`);
-    
-    try {
-      const config = new Configuration({
-        basePath: PlaidEnvironments[targetEnvironment as keyof typeof PlaidEnvironments],
-        baseOptions: {
-          headers: {
-            'PLAID-CLIENT-ID': PLAID_CLIENT_ID,
-            'PLAID-SECRET': PLAID_SECRET,
+    for (const env of environments) {
+      try {
+        console.log(`🔧 Trying Plaid ${env} environment`);
+        
+        const config = new Configuration({
+          basePath: PlaidEnvironments[env as keyof typeof PlaidEnvironments],
+          baseOptions: {
+            headers: {
+              'PLAID-CLIENT-ID': PLAID_CLIENT_ID,
+              'PLAID-SECRET': PLAID_SECRET,
+            },
           },
-        },
-      });
+        });
 
-      const client = new PlaidApi(config);
-        // Try with minimal configuration first for sandbox
+        const client = new PlaidApi(config);
+        // Configuration with proper redirect URI for Replit
+        const domain = process.env.REPLIT_DEV_DOMAIN || process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000';
+        const redirectUri = `https://${domain}/api/plaid/oauth-redirect`;
+        console.log(`🔗 Using redirect URI: ${redirectUri}`);
+        
         const linkTokenConfig = {
           user: { client_user_id: userId },
           client_name: 'Portfolio Dashboard',
-          products: targetEnvironment === 'sandbox' 
-            ? [Products.Transactions] // Sandbox usually requires basic products first
-            : [Products.Assets, Products.Investments, Products.Transactions],
+          products: [Products.Assets, Products.Investments, Products.Transactions],
           country_codes: [CountryCode.Us],
-          language: 'en' as const
+          language: 'en' as const,
+          redirect_uri: redirectUri
         };
 
         const response = await Promise.race([
@@ -114,23 +114,28 @@ export class PlaidService {
           )
         ]);
 
-      console.log(`✅ Plaid Link token created successfully using ${targetEnvironment} environment`);
-      return (response as any).data.link_token;
-    } catch (error: any) {
-      console.error(`❌ Plaid Link token creation failed with ${targetEnvironment} environment:`, error.response?.data || error.message);
-      
-      // Provide more helpful error message
-      const errorCode = error.response?.data?.error_code;
-      if (errorCode === 'INVALID_API_KEYS') {
-        throw new Error(`PLAID_CREDENTIALS_INVALID: The provided Plaid credentials are invalid or expired. Please update your PLAID_CLIENT_ID and PLAID_SECRET with valid credentials from your Plaid Dashboard.`);
+        console.log(`✅ Plaid Link token created successfully using ${env} environment`);
+        return (response as any).data.link_token;
+      } catch (error: any) {
+        console.log(`❌ Failed with ${env} environment:`, error.response?.data?.error_code || error.message);
+        lastError = error;
+        continue;
       }
-      
-      if (errorCode === 'INVALID_FIELD') {
-        throw new Error(`PLAID_CREDENTIALS_INVALID: The provided Plaid credentials appear to be for a different environment or are malformed. Please verify your PLAID_CLIENT_ID and PLAID_SECRET are correct.`);
-      }
-      
-      throw new Error(`Failed to create Plaid Link token: ${error.response?.data?.error_message || error.message}`);
     }
+
+    console.error('❌ All Plaid environments failed. Last error:', lastError.response?.data || lastError.message);
+      
+    // Provide more helpful error message
+    const errorCode = lastError.response?.data?.error_code;
+    if (errorCode === 'INVALID_API_KEYS') {
+      throw new Error(`PLAID_CREDENTIALS_INVALID: The provided Plaid credentials are invalid across all environments. Since they worked 15 minutes ago, they may have expired or been revoked. Please check your Plaid Dashboard for fresh credentials.`);
+    }
+    
+    if (errorCode === 'INVALID_FIELD') {
+      throw new Error(`PLAID_CREDENTIALS_INVALID: Configuration error detected. This was the account_filters issue you saw in your dashboard logs.`);
+    }
+    
+    throw new Error(`Failed to create Plaid Link token across all environments: ${lastError.response?.data?.error_message || lastError.message}`);
   }
 
   /**

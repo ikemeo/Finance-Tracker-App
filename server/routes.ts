@@ -491,6 +491,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Plaid OAuth redirect endpoint  
+  app.get("/api/plaid/oauth-redirect", (req, res) => {
+    // Handle OAuth redirects from Plaid
+    console.log('📨 Plaid OAuth redirect received:', req.query);
+    res.redirect('/?plaid_oauth_complete=true');
+  });
+
   app.post("/api/plaid/exchange-token", async (req, res) => {
     try {
       const { publicToken } = req.body;
