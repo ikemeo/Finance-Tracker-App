@@ -90,13 +90,28 @@ export class PlaidService {
         });
 
         const client = new PlaidApi(config);
-        const response = await client.linkTokenCreate({
-          user: { client_user_id: userId },
-          client_name: 'Portfolio Dashboard',
-          products: [Products.Assets, Products.Investments, Products.Transactions],
-          country_codes: [CountryCode.Us],
-          language: 'en',
-        });
+        const response = await Promise.race([
+          client.linkTokenCreate({
+            user: { client_user_id: userId },
+            client_name: 'Portfolio Dashboard',
+            products: [Products.Assets, Products.Investments, Products.Transactions],
+            country_codes: [CountryCode.Us],
+            language: 'en',
+            // Optimize for investment accounts
+            account_filters: {
+              investment: {
+                account_subtypes: ['brokerage', 'ira', 'roth', '401k', '403b', 'pension', 'mutual fund', 'investment']
+              },
+              depository: {
+                account_subtypes: ['checking', 'savings', 'money market', 'cd']
+              }
+            }
+          }),
+          // 30 second timeout
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Connection timeout - Plaid is taking longer than expected')), 30000)
+          )
+        ]);
 
         console.log(`✅ Plaid Link token created successfully using ${env} environment`);
         return response.data.link_token;

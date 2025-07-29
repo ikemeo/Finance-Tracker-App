@@ -44,9 +44,19 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Create link token on component mount
+  // Create link token on component mount with retry logic
   useEffect(() => {
-    linkTokenMutation.mutate();
+    const createToken = async () => {
+      try {
+        await linkTokenMutation.mutateAsync();
+      } catch (error) {
+        // Retry once after 2 seconds if token creation fails
+        setTimeout(() => {
+          linkTokenMutation.mutate();
+        }, 2000);
+      }
+    };
+    createToken();
   }, []);
 
   // Create Plaid Link token
@@ -271,6 +281,13 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 Plaid connects to over 12,000 financial institutions. Your credentials are encrypted and never stored.
               </p>
+              {linkTokenMutation.isPending && (
+                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-700">
+                    Initializing secure connection... This may take 10-15 seconds in production
+                  </p>
+                </div>
+              )}
               <Button
                 onClick={() => open()}
                 disabled={!ready || linkTokenMutation.isPending}
@@ -281,8 +298,13 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
                 ) : (
                   <Building2 className="h-4 w-4 mr-2" />
                 )}
-                {!ready ? 'Loading...' : 'Connect Account'}
+                {linkTokenMutation.isPending ? 'Connecting to Plaid...' : (!ready ? 'Loading...' : 'Connect Account')}
               </Button>
+              {linkTokenMutation.isPending && (
+                <p className="text-xs text-gray-500 mt-2">
+                  Using production environment for real bank connections
+                </p>
+              )}
             </div>
           </div>
         )}
