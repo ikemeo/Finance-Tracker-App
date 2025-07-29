@@ -96,7 +96,7 @@ export function VentureEditDialog({ investment, open, onOpenChange }: VentureEdi
         investmentDate: new Date(data.investmentDate),
         investmentAmount: data.investmentAmount,
         currentValuation: data.currentValuation || null,
-        ownershipPercentage: data.ownershipPercentage || null,
+        ownershipPercentage: data.ownershipPercentage && data.ownershipPercentage.trim() !== '' ? data.ownershipPercentage : null,
         leadInvestor: data.leadInvestor || null,
         exitDate: data.exitDate ? new Date(data.exitDate) : null,
         exitAmount: data.exitAmount || null,
@@ -301,7 +301,7 @@ export function VentureEditDialog({ investment, open, onOpenChange }: VentureEdi
                 name="ownershipPercentage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ownership (%)</FormLabel>
+                    <FormLabel>Ownership (%) - Optional</FormLabel>
                     <FormControl>
                       <Input
                         type="number"

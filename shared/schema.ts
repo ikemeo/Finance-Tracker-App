@@ -66,7 +66,7 @@ export const ventureInvestments = pgTable("venture_investments", {
   investmentDate: timestamp("investment_date").notNull(),
   investmentAmount: decimal("investment_amount", { precision: 12, scale: 2 }).notNull(),
   currentValuation: decimal("current_valuation", { precision: 12, scale: 2 }),
-  ownershipPercentage: decimal("ownership_percentage", { precision: 5, scale: 2 }),
+  ownershipPercentage: decimal("ownership_percentage", { precision: 5, scale: 2 }).default("0"),
   leadInvestor: text("lead_investor"),
   exitDate: timestamp("exit_date"),
   exitAmount: decimal("exit_amount", { precision: 12, scale: 2 }),
