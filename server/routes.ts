@@ -272,6 +272,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/real-estate/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteRealEstateInvestment(id);
+      if (!success) {
+        return res.status(404).json({ message: "Real estate investment not found" });
+      }
+      res.json({ message: "Real estate investment deleted successfully" });
+    } catch (error) {
+      console.error("DELETE /api/real-estate/:id - Error:", error);
+      res.status(500).json({ message: "Failed to delete real estate investment" });
+    }
+  });
+
   // Venture Investment routes
   app.get("/api/venture", async (req, res) => {
     try {

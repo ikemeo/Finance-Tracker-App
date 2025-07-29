@@ -44,6 +44,7 @@ export interface IStorage {
   getRealEstateInvestment(id: number): Promise<RealEstateInvestment | undefined>;
   createRealEstateInvestment(investment: InsertRealEstate): Promise<RealEstateInvestment>;
   updateRealEstateInvestment(id: number, updates: Partial<InsertRealEstate>): Promise<RealEstateInvestment | undefined>;
+  deleteRealEstateInvestment(id: number): Promise<boolean>;
   
   // Venture operations
   getVentureInvestments(): Promise<VentureInvestment[]>;
@@ -413,6 +414,10 @@ export class MemStorage implements IStorage {
     const updatedInvestment: RealEstateInvestment = { ...investment, ...updates };
     this.realEstateInvestments.set(id, updatedInvestment);
     return updatedInvestment;
+  }
+
+  async deleteRealEstateInvestment(id: number): Promise<boolean> {
+    return this.realEstateInvestments.delete(id);
   }
 
   // Venture Investment methods

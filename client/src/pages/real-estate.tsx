@@ -1,12 +1,40 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import RealEstateCard from "@/components/real-estate-card";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { type RealEstateInvestment } from "@shared/schema";
 
 export default function RealEstatePage() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const { data: investments = [], isLoading } = useQuery<RealEstateInvestment[]>({
     queryKey: ["/api/real-estate"],
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/real-estate/${id}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Property Deleted",
+        description: "Your real estate investment has been successfully deleted.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/real-estate'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/portfolio/summary'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Failed to delete real estate investment.",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleAddProperty = () => {
@@ -17,6 +45,12 @@ export default function RealEstatePage() {
   const handleEditProperty = (investment: RealEstateInvestment) => {
     // TODO: Open edit property dialog
     console.log("Edit property:", investment);
+  };
+
+  const handleDeleteProperty = (investment: RealEstateInvestment) => {
+    if (window.confirm(`Are you sure you want to delete "${investment.propertyName}"? This action cannot be undone.`)) {
+      deleteMutation.mutate(investment.id);
+    }
   };
 
   if (isLoading) {
@@ -72,6 +106,7 @@ export default function RealEstatePage() {
                 key={investment.id}
                 investment={investment}
                 onEdit={handleEditProperty}
+                onDelete={handleDeleteProperty}
               />
             ))}
           </div>

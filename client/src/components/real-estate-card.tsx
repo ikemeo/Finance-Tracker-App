@@ -2,12 +2,13 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type RealEstateInvestment } from "@shared/schema";
-import { Building, MapPin, DollarSign, TrendingUp, Calendar } from "lucide-react";
+import { Building, MapPin, DollarSign, TrendingUp, Calendar, Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 
 interface RealEstateCardProps {
   investment: RealEstateInvestment;
   onEdit?: (investment: RealEstateInvestment) => void;
+  onDelete?: (investment: RealEstateInvestment) => void;
 }
 
 const formatCurrency = (value: string | null) => {
@@ -42,7 +43,7 @@ const getPropertyTypeColor = (type: string) => {
   }
 };
 
-export default function RealEstateCard({ investment, onEdit }: RealEstateCardProps) {
+export default function RealEstateCard({ investment, onEdit, onDelete }: RealEstateCardProps) {
   const roi = calculateROI(investment.currentValue, investment.initialInvestment);
   const isPositive = parseFloat(roi) >= 0;
 
@@ -115,11 +116,24 @@ export default function RealEstateCard({ investment, onEdit }: RealEstateCardPro
           <Calendar className="w-4 h-4 mr-1" />
           Invested {format(new Date(investment.investmentDate), 'MMM yyyy')}
         </div>
-        {onEdit && (
-          <Button variant="outline" size="sm" onClick={() => onEdit(investment)}>
-            Edit
-          </Button>
-        )}
+        <div className="flex items-center space-x-2">
+          {onEdit && (
+            <Button variant="outline" size="sm" onClick={() => onEdit(investment)}>
+              <Edit className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+          )}
+          {onDelete && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => onDelete(investment)}
+              className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {investment.notes && (
