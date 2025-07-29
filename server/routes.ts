@@ -308,14 +308,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/venture/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      console.log("PATCH /api/venture/:id - Request body:", JSON.stringify(req.body, null, 2));
       const updateData = insertVentureSchema.partial().parse(req.body);
+      console.log("PATCH /api/venture/:id - Parsed data:", JSON.stringify(updateData, null, 2));
       const investment = await storage.updateVentureInvestment(id, updateData);
       if (!investment) {
         return res.status(404).json({ message: "Venture investment not found" });
       }
       res.json(investment);
     } catch (error) {
-      res.status(400).json({ message: "Invalid venture investment data" });
+      console.error("PATCH /api/venture/:id - Error:", error);
+      res.status(400).json({ message: "Invalid venture investment data", error: error.message });
     }
   });
 
