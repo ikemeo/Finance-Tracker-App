@@ -36,7 +36,11 @@ const calculateCurrentValue = (investment: VentureInvestment) => {
   if (investment.status === 'exited' && investment.exitAmount) {
     return parseFloat(investment.exitAmount);
   } else if (investment.currentValuation && investment.ownershipPercentage) {
+    // If we have both valuation and ownership, calculate proportional value
     return parseFloat(investment.currentValuation) * parseFloat(investment.ownershipPercentage) / 100;
+  } else if (investment.currentValuation) {
+    // If we only have current valuation (no ownership %), use the full valuation as current value
+    return parseFloat(investment.currentValuation);
   }
   return parseFloat(investment.investmentAmount);
 };
