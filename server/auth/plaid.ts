@@ -73,23 +73,28 @@ export class PlaidService {
       throw new Error('Plaid credentials not configured. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.');
     }
 
-    // Try production first since user has production access, then fallback to others
-    const environments = ['production', 'development', 'sandbox'];
-    let lastError: any;
+    // Determine environment based on credentials - sandbox keys are different format
+    let targetEnvironment = 'sandbox';
+    if (PLAID_CLIENT_ID.length > 24 && PLAID_SECRET.length > 30) {
+      targetEnvironment = 'production';
+    } else if (PLAID_CLIENT_ID.startsWith('5') || PLAID_CLIENT_ID.startsWith('6')) {
+      targetEnvironment = 'sandbox';
+    }
 
-    for (const env of environments) {
-      try {
-        const config = new Configuration({
-          basePath: PlaidEnvironments[env as keyof typeof PlaidEnvironments],
-          baseOptions: {
-            headers: {
-              'PLAID-CLIENT-ID': PLAID_CLIENT_ID,
-              'PLAID-SECRET': PLAID_SECRET,
-            },
+    console.log(`🔧 Using Plaid ${targetEnvironment} environment based on credential format`);
+    
+    try {
+      const config = new Configuration({
+        basePath: PlaidEnvironments[targetEnvironment as keyof typeof PlaidEnvironments],
+        baseOptions: {
+          headers: {
+            'PLAID-CLIENT-ID': PLAID_CLIENT_ID,
+            'PLAID-SECRET': PLAID_SECRET,
           },
-        });
+        },
+      });
 
-        const client = new PlaidApi(config);
+      const client = new PlaidApi(config);
         const response = await Promise.race([
           client.linkTokenCreate({
             user: { client_user_id: userId },
@@ -113,24 +118,19 @@ export class PlaidService {
           )
         ]);
 
-        console.log(`✅ Plaid Link token created successfully using ${env} environment`);
-        return response.data.link_token;
-      } catch (error: any) {
-        console.log(`❌ Failed with ${env} environment:`, error.response?.data?.error_code || error.message);
-        lastError = error;
-        continue;
+      console.log(`✅ Plaid Link token created successfully using ${targetEnvironment} environment`);
+      return (response as any).data.link_token;
+    } catch (error: any) {
+      console.error(`❌ Plaid Link token creation failed with ${targetEnvironment} environment:`, error.response?.data || error.message);
+      
+      // Provide more helpful error message
+      const errorCode = error.response?.data?.error_code;
+      if (errorCode === 'INVALID_API_KEYS') {
+        throw new Error(`Invalid Plaid credentials for ${targetEnvironment} environment. Please verify your PLAID_CLIENT_ID and PLAID_SECRET are correct.`);
       }
+      
+      throw new Error(`Failed to create Plaid Link token: ${error.response?.data?.error_message || error.message}`);
     }
-
-    console.error('All Plaid environments failed. Last error:', lastError.response?.data || lastError.message);
-    
-    // Provide more helpful error message
-    const errorCode = lastError.response?.data?.error_code;
-    if (errorCode === 'INVALID_API_KEYS') {
-      throw new Error(`Invalid Plaid credentials provided. Please verify your PLAID_CLIENT_ID and PLAID_SECRET are correct and match the intended environment (development/sandbox/production).`);
-    }
-    
-    throw new Error(`Failed to create Plaid Link token: ${lastError.response?.data?.error_message || lastError.message}`);
   }
 
   /**

@@ -73,9 +73,12 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
       setConnectionStep('connecting');
     },
     onError: (error: any) => {
+      const isCredentialError = error.message.includes('Invalid Plaid credentials');
       toast({
-        title: "Connection Failed",
-        description: error.message || "Failed to initialize Plaid Link",
+        title: isCredentialError ? "Credential Issue" : "Connection Failed",
+        description: isCredentialError 
+          ? "Plaid credentials need to be updated. Please check your Client ID and Secret."
+          : error.message || "Failed to initialize Plaid Link",
         variant: "destructive",
       });
     },
