@@ -105,9 +105,9 @@ export class PlaidService {
 
       const response = await Promise.race([
         client.linkTokenCreate(linkTokenConfig),
-        // 10 second timeout for faster response
+        // 5 second timeout for faster response
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Connection timeout - Plaid is taking longer than expected')), 10000)
+          setTimeout(() => reject(new Error('Connection timeout - Plaid is taking longer than expected')), 5000)
         )
       ]);
 

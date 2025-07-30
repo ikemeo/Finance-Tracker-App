@@ -294,13 +294,19 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
               {linkTokenMutation.isPending && (
                 <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                   <p className="text-sm text-blue-700">
-                    Initializing secure connection... Usually takes 2-3 seconds
+                    Initializing secure connection... This should take just a moment
                   </p>
                 </div>
               )}
               <Button
-                onClick={() => open()}
-                disabled={!ready || linkTokenMutation.isPending}
+                onClick={() => {
+                  if (linkTokenMutation.isPending) {
+                    // If stuck, allow retry
+                    linkTokenMutation.reset();
+                  }
+                  open();
+                }}
+                disabled={!ready && !linkTokenMutation.isPending}
                 size="lg"
               >
                 {linkTokenMutation.isPending ? (
@@ -310,6 +316,22 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
                 )}
                 {linkTokenMutation.isPending ? 'Connecting to Plaid...' : (!ready ? 'Loading...' : 'Connect Account')}
               </Button>
+              {linkTokenMutation.isPending && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    linkTokenMutation.reset();
+                    toast({
+                      title: "Connection Reset",
+                      description: "You can try connecting again now.",
+                    });
+                  }}
+                  className="mt-2"
+                >
+                  Cancel & Retry
+                </Button>
+              )}
               {linkTokenMutation.isPending && (
                 <p className="text-xs text-gray-500 mt-2">
                   Connecting to 12,000+ financial institutions
