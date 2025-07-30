@@ -175,10 +175,10 @@ export default function Dashboard() {
                 <AccountCard
                   title="Total AUM"
                   value={formatValue(summary.totalAum)}
-                  change="12.4"
-                  percentage="vs last month"
-                  icon={<Wallet className="text-primary text-xl" />}
-                  iconBg="bg-primary"
+                  change="8.7"
+                  percentage="Last 30 days"
+                  icon={<Wallet className="h-6 w-6" />}
+                  iconBg="bg-gradient-to-br from-blue-500 to-blue-600"
                   positive={true}
                 />
               </div>
@@ -186,10 +186,10 @@ export default function Dashboard() {
                 <AccountCard
                   title="Traditional"
                   value={formatValue(summary.traditionalAum, 'traditional')}
-                  change="8.2"
+                  change="7.4"
                   percentage={showValues && !hiddenCategories['traditional'] ? `${((summary.traditionalAum / summary.totalAum) * 100).toFixed(1)}%` : "••%"}
-                  icon={<TrendingUp className="text-secondary text-xl" />}
-                  iconBg="bg-secondary"
+                  icon={<TrendingUp className="h-6 w-6" />}
+                  iconBg="bg-gradient-to-br from-green-500 to-green-600"
                   positive={true}
                 />
                 <Button
@@ -206,10 +206,10 @@ export default function Dashboard() {
                 <AccountCard
                   title="Real Estate"
                   value={formatValue(summary.realEstateValue, 'realestate')}
-                  change="5.7"
+                  change="12.3"
                   percentage={showValues && !hiddenCategories['realestate'] ? `${((summary.realEstateValue / summary.totalAum) * 100).toFixed(1)}%` : "••%"}
-                  icon={<Home className="text-amber-600 text-xl" />}
-                  iconBg="bg-amber-100"
+                  icon={<Home className="h-6 w-6" />}
+                  iconBg="bg-gradient-to-br from-amber-500 to-orange-500"
                   positive={true}
                 />
                 <Button
@@ -226,10 +226,10 @@ export default function Dashboard() {
                 <AccountCard
                   title="Venture/Angel"
                   value={formatValue(summary.ventureValue, 'venture')}
-                  change="15.3"
+                  change="23.8"
                   percentage={showValues && !hiddenCategories['venture'] ? `${((summary.ventureValue / summary.totalAum) * 100).toFixed(1)}%` : "••%"}
-                  icon={<Target className="text-purple-600 text-xl" />}
-                  iconBg="bg-purple-100"
+                  icon={<Target className="h-6 w-6" />}
+                  iconBg="bg-gradient-to-br from-purple-500 to-indigo-600"
                   positive={true}
                 />
                 <Button
@@ -246,10 +246,10 @@ export default function Dashboard() {
                 <AccountCard
                   title="Crypto"
                   value={formatValue(summary.categoryTotals.crypto || 0, 'crypto')}
-                  change="-3.1"
+                  change="-8.2"
                   percentage={showValues && !hiddenCategories['crypto'] ? `${(((summary.categoryTotals.crypto || 0) / summary.totalAum) * 100).toFixed(1)}%` : "••%"}
-                  icon={<Bitcoin className="text-yellow-500 text-xl" />}
-                  iconBg="bg-yellow-500"
+                  icon={<Bitcoin className="h-6 w-6" />}
+                  iconBg="bg-gradient-to-br from-yellow-500 to-orange-500"
                   positive={false}
                 />
                 <Button

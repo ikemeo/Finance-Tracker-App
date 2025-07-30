@@ -67,8 +67,10 @@ export default function AccountCard({
             )}
           </div>
         </div>
-        <div className={cn("w-12 h-12 bg-opacity-10 rounded-lg flex items-center justify-center", iconBg)}>
-          {icon}
+        <div className={cn("w-16 h-16 rounded-xl flex items-center justify-center shadow-sm", iconBg)}>
+          <div className="text-white">
+            {icon}
+          </div>
         </div>
       </div>
     </div>
