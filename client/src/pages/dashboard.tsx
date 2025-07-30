@@ -52,7 +52,7 @@ export default function Dashboard() {
     if (!showValues || (category && hiddenCategories[category])) {
       return "••••••";
     }
-    return value.toLocaleString();
+    return value.toString();
   };
 
   const { data: accounts = [], isLoading: accountsLoading } = useQuery<Account[]>({
@@ -195,7 +195,7 @@ export default function Dashboard() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="absolute top-2 right-2 h-6 w-6 p-0"
+                  className="absolute top-2 right-2 h-6 w-6 p-0 opacity-70 hover:opacity-100"
                   onClick={() => toggleCategoryVisibility('traditional')}
                   title={hiddenCategories['traditional'] ? "Show traditional values" : "Hide traditional values"}
                 >
@@ -215,7 +215,7 @@ export default function Dashboard() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="absolute top-2 right-2 h-6 w-6 p-0"
+                  className="absolute top-2 right-2 h-6 w-6 p-0 opacity-70 hover:opacity-100"
                   onClick={() => toggleCategoryVisibility('realestate')}
                   title={hiddenCategories['realestate'] ? "Show real estate values" : "Hide real estate values"}
                 >
@@ -235,7 +235,7 @@ export default function Dashboard() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="absolute top-2 right-2 h-6 w-6 p-0"
+                  className="absolute top-2 right-2 h-6 w-6 p-0 opacity-70 hover:opacity-100"
                   onClick={() => toggleCategoryVisibility('venture')}
                   title={hiddenCategories['venture'] ? "Show venture values" : "Hide venture values"}
                 >
@@ -255,7 +255,7 @@ export default function Dashboard() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="absolute top-2 right-2 h-6 w-6 p-0"
+                  className="absolute top-2 right-2 h-6 w-6 p-0 opacity-70 hover:opacity-100"
                   onClick={() => toggleCategoryVisibility('crypto')}
                   title={hiddenCategories['crypto'] ? "Show crypto values" : "Hide crypto values"}
                 >
