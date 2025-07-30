@@ -55,12 +55,12 @@ export default function ConnectAccounts() {
   });
 
   const createAccountMutation = useMutation({
-    mutationFn: async (provider: string) => {
+    mutationFn: async (data: { provider: string; name: string }) => {
       return apiRequestJson('/api/accounts', {
         method: 'POST',
         body: JSON.stringify({
-          name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Account`,
-          provider,
+          name: data.name,
+          provider: data.provider,
           accountType: 'individual',
           balance: '0.00',
           isConnected: false
@@ -69,14 +69,18 @@ export default function ConnectAccounts() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/accounts'] });
+      setSelectedAccountId(data.id);
+      
+      // Open appropriate integration modal based on provider
       if (data.provider === 'etrade') {
-        setSelectedAccountId(data.id);
         setShowETradeAuth(true);
+      } else if (data.provider === 'plaid') {
+        setShowPlaidLink(true);
       }
     },
     onError: (error: any) => {
       toast({
-        title: "Failed to Create Account",
+        title: "Account Creation Failed",
         description: error.message,
         variant: "destructive",
       });
@@ -385,9 +389,11 @@ export default function ConnectAccounts() {
                         <Button
                           size="sm"
                           onClick={() => {
+                            setSelectedAccountId(account.id);
                             if (account.provider === 'etrade') {
-                              setSelectedAccountId(account.id);
                               setShowETradeAuth(true);
+                            } else if (account.provider === 'plaid') {
+                              setShowPlaidLink(true);
                             }
                           }}
                         >
@@ -403,62 +409,104 @@ export default function ConnectAccounts() {
           </CardContent>
         </Card>
 
-        {/* Add New Account */}
+        {/* Connection Methods */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Plaid Universal Connector */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-blue-600" />
+                Plaid Universal Connector
+              </CardTitle>
+              <CardDescription>
+                Connect to 12,000+ financial institutions including E*TRADE, Schwab, Fidelity, Chase, Bank of America, and more.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-900 mb-2">Supported Institutions:</h4>
+                <div className="text-sm text-blue-700 space-y-1">
+                  <div>• <strong>Brokerages:</strong> E*TRADE, Schwab, Fidelity, TD Ameritrade, Robinhood</div>
+                  <div>• <strong>Banks:</strong> Chase, Bank of America, Wells Fargo, Capital One</div>
+                  <div>• <strong>Credit Unions & More:</strong> 12,000+ institutions</div>
+                </div>
+              </div>
+              <Button
+                onClick={() => {
+                  createAccountMutation.mutate({ 
+                    provider: 'plaid', 
+                    name: 'Plaid Connected Account' 
+                  });
+                }}
+                disabled={createAccountMutation.isPending}
+                className="w-full"
+                size="lg"
+              >
+                <Building2 className="h-4 w-4 mr-2" />
+                Connect via Plaid
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* E*TRADE Direct API */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plug className="h-5 w-5 text-green-600" />
+                E*TRADE Direct API
+              </CardTitle>
+              <CardDescription>
+                Native E*TRADE integration for advanced features and real-time data access.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h4 className="font-medium text-green-900 mb-2">Advanced Features:</h4>
+                <div className="text-sm text-green-700 space-y-1">
+                  <div>• Real-time quotes and market data</div>
+                  <div>• Order placement and management</div>
+                  <div>• Advanced portfolio analytics</div>
+                  <div>• Options and futures data</div>
+                </div>
+              </div>
+              <Button
+                onClick={() => {
+                  createAccountMutation.mutate({ 
+                    provider: 'etrade', 
+                    name: 'E*TRADE Account' 
+                  });
+                }}
+                disabled={createAccountMutation.isPending}
+                className="w-full"
+                size="lg"
+                variant="outline"
+              >
+                <Plug className="h-4 w-4 mr-2" />
+                Connect E*TRADE Direct
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Setup Guide */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              Add New Account
+              <Info className="h-5 w-5" />
+              Setup Guide & Credentials
             </CardTitle>
             <CardDescription>
-              Connect a new brokerage account to your dashboard.
+              View setup instructions and manage API credentials for different integration methods.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" 
-                    onClick={() => createAccountMutation.mutate('etrade')}>
-                <CardContent className="p-6 text-center">
-                  <div className="mb-2">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <span className="text-2xl font-bold text-blue-600">E</span>
-                    </div>
-                    <h3 className="font-semibold">E*TRADE</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Connect your E*TRADE brokerage account
-                    </p>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    className="w-full"
-                    disabled={createAccountMutation.isPending}
-                  >
-                    {createAccountMutation.isPending ? 'Adding...' : 'Add E*TRADE'}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" 
-                    onClick={() => {
-                      setSelectedAccountId(Date.now());
-                      setShowPlaidLink(true);
-                    }}>
-                <CardContent className="p-6 text-center">
-                  <div className="mb-2">
-                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <Building2 className="h-6 w-6 text-green-600" />
-                    </div>
-                    <h3 className="font-semibold">Plaid Banks</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Connect to 12,000+ financial institutions
-                    </p>
-                  </div>
-                  <Button size="sm" className="w-full">
-                    Connect with Plaid
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+            <Button
+              onClick={() => setShowCredentialsSetup(true)}
+              variant="outline"
+            >
+              <Info className="h-4 w-4 mr-2" />
+              View Setup Instructions
+            </Button>
           </CardContent>
         </Card>
       </div>

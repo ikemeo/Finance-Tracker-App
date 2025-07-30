@@ -187,3 +187,15 @@ The application now provides comprehensive financial data connectivity through b
 - ✓ Added proper API endpoints for PATCH and DELETE operations on venture investments
 - ✓ Integrated toast notifications for successful operations and error handling
 - ✓ Automatic cache invalidation for real-time UI updates after edit/delete operations
+
+### Integration Architecture Restructure (January 30, 2025)
+- ✓ Fixed TypeScript compilation errors preventing Connect Accounts page from loading
+- ✓ Updated API request functions to use proper JSON parsing (apiRequestJson vs apiRequest)
+- ✓ Restructured Connect Accounts page to clearly present two distinct integration paths:
+  - **Plaid Universal Connector**: Access to 12,000+ financial institutions (E*TRADE, Schwab, Fidelity, Chase, etc.)
+  - **E*TRADE Direct API**: Native integration for advanced features (real-time quotes, order management, options data)
+- ✓ Enhanced UI to show clear benefits and use cases for each integration method
+- ✓ Updated account creation flow to properly route to correct integration based on provider selection
+- ✓ Maintained separate authentication flows: Plaid for universal access, E*TRADE Direct for advanced functionality
+
+**Architecture Clarification**: Plaid and E*TRADE operate as complementary integration methods, not competing options. Users can connect E*TRADE through Plaid for standard portfolio tracking OR use E*TRADE Direct API for advanced trading features.
