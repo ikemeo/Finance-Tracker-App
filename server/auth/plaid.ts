@@ -199,9 +199,11 @@ export class PlaidService {
    */
   async getHoldings(accessToken: string): Promise<PlaidHolding[]> {
     try {
+      console.log('Fetching holdings with access token:', accessToken?.substring(0, 20) + '...');
       const response = await plaidClient.investmentsHoldingsGet({
         access_token: accessToken,
       });
+      console.log('Plaid holdings response:', JSON.stringify(response.data, null, 2));
 
       const holdings: PlaidHolding[] = [];
 

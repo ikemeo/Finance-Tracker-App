@@ -121,7 +121,7 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
       const selectedAccount = plaidAccounts.find((acc: PlaidAccount) => acc.accountId === selectedPlaidAccount);
       if (!selectedAccount) throw new Error('No account selected');
 
-      // Update account balance
+      // Update account balance and store access token
       await apiRequestJson(`/api/accounts/${accountId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -129,6 +129,9 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
           balance: selectedAccount.balances.current?.toString() || '0',
           name: `${selectedAccount.institutionName} - ${selectedAccount.name}`,
           lastSync: new Date().toISOString(),
+          accessToken: accessToken, // Store the Plaid access token
+          externalAccountId: selectedAccount.accountId, // Store the Plaid account ID
+          isConnected: true,
         }),
       });
 
@@ -141,19 +144,24 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
       }
 
       // Add new holdings from Plaid
+      console.log('Processing Plaid holdings:', plaidHoldings);
       for (const holding of plaidHoldings) {
+        const holdingData = {
+          accountId,
+          symbol: holding.symbol || holding.name?.substring(0, 6).toUpperCase() || 'UNKNOWN',
+          name: holding.name || 'Unknown Holding',
+          shares: (holding.quantity || 0).toString(),
+          currentPrice: (holding.currentPrice || 0).toString(),
+          totalValue: (holding.totalValue || 0).toString(),
+          category: holding.category || 'stocks',
+          changePercent: '0.00', // Default change percent
+        };
+        
+        console.log('Creating holding with data:', holdingData);
         await apiRequestJson('/api/holdings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            accountId,
-            symbol: holding.symbol || holding.name.substring(0, 6).toUpperCase(),
-            name: holding.name,
-            shares: holding.quantity.toString(),
-            currentPrice: holding.currentPrice.toString(),
-            totalValue: holding.totalValue.toString(),
-            category: holding.category,
-          }),
+          body: JSON.stringify(holdingData),
         });
       }
 

@@ -127,11 +127,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/holdings", async (req, res) => {
     try {
+      console.log('Creating holding with data:', req.body);
       const holdingData = insertHoldingSchema.parse(req.body);
       const holding = await storage.createHolding(holdingData);
       res.status(201).json(holding);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid holding data" });
+    } catch (error: any) {
+      console.error('Holding creation error:', error);
+      res.status(400).json({ message: "Invalid holding data", details: error.message });
     }
   });
 
