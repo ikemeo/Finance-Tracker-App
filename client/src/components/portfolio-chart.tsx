@@ -5,6 +5,7 @@ interface PortfolioChartProps {
 }
 
 const COLORS = {
+  traditional: "#1565C0",
   stocks: "#1565C0",
   etfs: "#2E7D32",
   crypto: "#F57C00",
@@ -24,11 +25,15 @@ const formatCurrency = (value: number) => {
 };
 
 export default function PortfolioChart({ data }: PortfolioChartProps) {
-  const chartData = Object.entries(data).map(([category, value]) => ({
-    name: category.charAt(0).toUpperCase() + category.slice(1),
-    value,
-    color: COLORS[category as keyof typeof COLORS] || "#607D8B"
-  }));
+  const chartData = Object.entries(data)
+    .filter(([_, value]) => value > 0) // Only show categories with values
+    .map(([category, value]) => ({
+      name: category === 'real-estate' ? 'Real Estate' : 
+            category === 'venture' ? 'Venture/Angel' :
+            category.charAt(0).toUpperCase() + category.slice(1),
+      value,
+      color: COLORS[category as keyof typeof COLORS] || "#607D8B"
+    }));
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {

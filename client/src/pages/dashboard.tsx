@@ -170,7 +170,7 @@ export default function Dashboard() {
         <main className="flex-1 p-6">
           {/* AUM Overview Cards */}
           {summary && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
               <div className="relative">
                 <AccountCard
                   title="Total AUM"
@@ -268,7 +268,12 @@ export default function Dashboard() {
           {/* Charts and Analysis Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             {summary && (
-              <PortfolioChart data={summary.categoryTotals} />
+              <PortfolioChart data={{
+                traditional: summary.traditionalAum,
+                'real-estate': summary.realEstateValue,
+                venture: summary.ventureValue,
+                crypto: summary.categoryTotals.crypto || 0
+              }} />
             )}
             <TopHoldings holdings={holdings} />
           </div>
