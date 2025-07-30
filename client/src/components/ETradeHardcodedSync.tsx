@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequestJson } from '@/lib/queryClient';
 import { RefreshCw, CheckCircle, XCircle, Zap } from 'lucide-react';
 
 interface ETradeAccount {
@@ -36,24 +36,27 @@ export function ETradeHardcodedSync({ accountId, onClose }: ETradeHardcodedSyncP
   // Test connection to E*TRADE API
   const { data: connectionTest, isLoading: testingConnection } = useQuery({
     queryKey: ['/api/etrade/test-connection'],
-    queryFn: () => apiRequest('/api/etrade/test-connection', { method: 'POST' }),
+    queryFn: () => apiRequestJson('/api/etrade/test-connection', { method: 'POST' }),
   });
 
   // Get E*TRADE accounts
   const { data: etradeAccounts = [], isLoading: loadingAccounts } = useQuery({
     queryKey: ['/api/etrade/accounts'],
+    queryFn: () => apiRequestJson('/api/etrade/accounts'),
     enabled: connectionTest?.success,
   });
 
   // Get balance for selected account
   const { data: accountBalance, isLoading: loadingBalance } = useQuery({
     queryKey: ['/api/etrade/balance', selectedETradeAccount],
+    queryFn: () => apiRequestJson(`/api/etrade/balance?account_id=${selectedETradeAccount}`),
     enabled: !!selectedETradeAccount,
   });
 
   // Get positions for selected account
   const { data: accountPositions = [], isLoading: loadingPositions } = useQuery({
     queryKey: ['/api/etrade/positions', selectedETradeAccount],
+    queryFn: () => apiRequestJson(`/api/etrade/positions?account_id=${selectedETradeAccount}`),
     enabled: !!selectedETradeAccount,
   });
 
@@ -64,27 +67,27 @@ export function ETradeHardcodedSync({ accountId, onClose }: ETradeHardcodedSyncP
       }
 
       // Update account balance
-      await apiRequest(`/api/accounts/${accountId}`, {
+      await apiRequestJson(`/api/accounts/${accountId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          balance: accountBalance.balance.toString(),
+          balance: (accountBalance as any)?.balance?.toString() || '0',
           lastSync: new Date().toISOString(),
         }),
       });
 
       // Clear existing holdings
-      const existingHoldings = await apiRequest(`/api/accounts/${accountId}/holdings`);
+      const existingHoldings = await apiRequestJson(`/api/accounts/${accountId}/holdings`);
       for (const holding of existingHoldings) {
-        if (holding.id) {
-          await apiRequest(`/api/holdings/${holding.id}`, { method: 'DELETE' });
+        if ((holding as any).id) {
+          await apiRequestJson(`/api/holdings/${(holding as any).id}`, { method: 'DELETE' });
         }
       }
 
       // Add new holdings from E*TRADE positions
-      for (const position of accountPositions) {
+      for (const position of (accountPositions as any[])) {
         if (position.symbol && position.totalValue > 0) {
-          await apiRequest('/api/holdings', {
+          await apiRequestJson('/api/holdings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -102,7 +105,7 @@ export function ETradeHardcodedSync({ accountId, onClose }: ETradeHardcodedSyncP
       }
 
       // Log sync activity
-      await apiRequest('/api/activities', {
+      await apiRequestJson('/api/activities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

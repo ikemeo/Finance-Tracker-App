@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequestJson } from '@/lib/queryClient';
 import { Banknote, Building2, CreditCard, TrendingUp, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface PlaidLinkProps {
@@ -49,7 +49,7 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
   // Create Plaid Link token
   const linkTokenMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest('/api/plaid/create-link-token', {
+      return await apiRequestJson('/api/plaid/create-link-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: `user_${accountId}` }),
@@ -82,7 +82,7 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
   // Exchange public token for access token
   const exchangeTokenMutation = useMutation({
     mutationFn: async (publicToken: string) => {
-      return await apiRequest('/api/plaid/exchange-token', {
+      return await apiRequestJson('/api/plaid/exchange-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ publicToken }),
@@ -104,14 +104,14 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
   // Get Plaid accounts
   const { data: plaidAccounts = [], isLoading: loadingAccounts } = useQuery({
     queryKey: ['/api/plaid/accounts', accessToken],
-    queryFn: () => apiRequest(`/api/plaid/accounts?access_token=${accessToken}`),
+    queryFn: () => apiRequestJson(`/api/plaid/accounts?access_token=${accessToken}`),
     enabled: !!accessToken && connectionStep === 'connected',
   });
 
   // Get holdings for selected account
   const { data: plaidHoldings = [], isLoading: loadingHoldings } = useQuery({
     queryKey: ['/api/plaid/holdings', accessToken, selectedPlaidAccount],
-    queryFn: () => apiRequest(`/api/plaid/holdings?access_token=${accessToken}&account_id=${selectedPlaidAccount}`),
+    queryFn: () => apiRequestJson(`/api/plaid/holdings?access_token=${accessToken}&account_id=${selectedPlaidAccount}`),
     enabled: !!accessToken && !!selectedPlaidAccount,
   });
 
@@ -122,7 +122,7 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
       if (!selectedAccount) throw new Error('No account selected');
 
       // Update account balance
-      await apiRequest(`/api/accounts/${accountId}`, {
+      await apiRequestJson(`/api/accounts/${accountId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -133,16 +133,16 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
       });
 
       // Clear existing holdings
-      const existingHoldings = await apiRequest(`/api/accounts/${accountId}/holdings`);
-      for (const holding of existingHoldings) {
+      const existingHoldings = await apiRequestJson(`/api/accounts/${accountId}/holdings`);
+      for (const holding of (existingHoldings as any[])) {
         if (holding.id) {
-          await apiRequest(`/api/holdings/${holding.id}`, { method: 'DELETE' });
+          await apiRequestJson(`/api/holdings/${holding.id}`, { method: 'DELETE' });
         }
       }
 
       // Add new holdings from Plaid
       for (const holding of plaidHoldings) {
-        await apiRequest('/api/holdings', {
+        await apiRequestJson('/api/holdings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -158,7 +158,7 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
       }
 
       // Log sync activity
-      await apiRequest('/api/activities', {
+      await apiRequestJson('/api/activities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
