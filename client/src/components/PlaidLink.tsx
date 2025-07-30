@@ -44,20 +44,7 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Create link token on component mount with retry logic
-  useEffect(() => {
-    const createToken = async () => {
-      try {
-        await linkTokenMutation.mutateAsync();
-      } catch (error) {
-        // Retry once after 2 seconds if token creation fails
-        setTimeout(() => {
-          linkTokenMutation.mutate();
-        }, 2000);
-      }
-    };
-    createToken();
-  }, []);
+  // Don't create token automatically - wait for user click
 
   // Create Plaid Link token
   const linkTokenMutation = useMutation({
@@ -71,6 +58,7 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
     onSuccess: (data) => {
       setLinkToken(data.linkToken);
       setConnectionStep('connecting');
+      // The useEffect will handle opening when ready
     },
     onError: (error: any) => {
       const isCredentialError = error.message.includes('PLAID_CREDENTIALS_INVALID');
@@ -223,6 +211,14 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
     onExit: handlePlaidExit,
   });
 
+  // Auto-open Plaid interface when ready after token creation
+  useEffect(() => {
+    if (ready && linkToken && connectionStep === 'connecting') {
+      console.log('Auto-opening Plaid interface');
+      open();
+    }
+  }, [ready, linkToken, connectionStep, open]);
+
   const getAccountIcon = (type: string, subtype: string) => {
     if (type === 'investment' || subtype.includes('brokerage')) return <TrendingUp className="h-5 w-5" />;
     if (type === 'depository') return <Banknote className="h-5 w-5" />;
@@ -299,14 +295,22 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
                 </div>
               )}
               <Button
-                onClick={() => {
-                  if (linkTokenMutation.isPending) {
-                    // If stuck, allow retry
-                    linkTokenMutation.reset();
+                onClick={async () => {
+                  if (!linkToken && !linkTokenMutation.isPending) {
+                    // Create token first, then open
+                    try {
+                      await linkTokenMutation.mutateAsync();
+                      // The token creation will trigger setConnectionStep('connecting') 
+                      // and then usePlaidLink will call open() automatically
+                    } catch (error) {
+                      console.error('Failed to create link token:', error);
+                    }
+                  } else if (ready) {
+                    // Token exists and ready, open immediately
+                    open();
                   }
-                  open();
                 }}
-                disabled={!ready && !linkTokenMutation.isPending}
+                disabled={linkTokenMutation.isPending}
                 size="lg"
               >
                 {linkTokenMutation.isPending ? (
@@ -314,24 +318,8 @@ export function PlaidLink({ accountId, onClose }: PlaidLinkProps) {
                 ) : (
                   <Building2 className="h-4 w-4 mr-2" />
                 )}
-                {linkTokenMutation.isPending ? 'Connecting to Plaid...' : (!ready ? 'Loading...' : 'Connect Account')}
+                {linkTokenMutation.isPending ? 'Opening Plaid...' : 'Connect Account'}
               </Button>
-              {linkTokenMutation.isPending && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => {
-                    linkTokenMutation.reset();
-                    toast({
-                      title: "Connection Reset",
-                      description: "You can try connecting again now.",
-                    });
-                  }}
-                  className="mt-2"
-                >
-                  Cancel & Retry
-                </Button>
-              )}
               {linkTokenMutation.isPending && (
                 <p className="text-xs text-gray-500 mt-2">
                   Connecting to 12,000+ financial institutions
