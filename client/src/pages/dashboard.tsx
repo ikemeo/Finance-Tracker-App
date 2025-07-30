@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState } from "react";
 import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -15,7 +16,9 @@ import {
   Bitcoin, 
   RefreshCw,
   Home,
-  Target
+  Target,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { type Account, type Holding, type Activity } from "@shared/schema";
 
@@ -31,6 +34,26 @@ interface PortfolioSummary {
 
 export default function Dashboard() {
   const { toast } = useToast();
+  
+  // Privacy controls
+  const [showValues, setShowValues] = useState(true);
+  const [hiddenCategories, setHiddenCategories] = useState<Record<string, boolean>>({});
+  
+  const toggleGlobalVisibility = () => setShowValues(!showValues);
+  
+  const toggleCategoryVisibility = (category: string) => {
+    setHiddenCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+  
+  const formatValue = (value: number, category?: string) => {
+    if (!showValues || (category && hiddenCategories[category])) {
+      return "••••••";
+    }
+    return `$${value.toLocaleString()}`;
+  };
 
   const { data: accounts = [], isLoading: accountsLoading } = useQuery<Account[]>({
     queryKey: ["/api/accounts"],
@@ -120,6 +143,14 @@ export default function Dashboard() {
               <div className="flex items-center space-x-4">
                 <Button 
                   variant="outline" 
+                  size="sm"
+                  onClick={toggleGlobalVisibility}
+                  title={showValues ? "Hide all values" : "Show all values"}
+                >
+                  {showValues ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                </Button>
+                <Button 
+                  variant="outline" 
                   onClick={handleRefresh}
                   disabled={refreshMutation.isPending}
                 >
@@ -140,51 +171,97 @@ export default function Dashboard() {
           {/* AUM Overview Cards */}
           {summary && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-              <AccountCard
-                title="Total AUM"
-                value={summary.totalAum.toString()}
-                change="12.4"
-                percentage="vs last month"
-                icon={<Wallet className="text-primary text-xl" />}
-                iconBg="bg-primary"
-                positive={true}
-              />
-              <AccountCard
-                title="Traditional"
-                value={summary.traditionalAum.toString()}
-                change="8.2"
-                percentage={`${((summary.traditionalAum / summary.totalAum) * 100).toFixed(1)}%`}
-                icon={<TrendingUp className="text-secondary text-xl" />}
-                iconBg="bg-secondary"
-                positive={true}
-              />
-              <AccountCard
-                title="Real Estate"
-                value={summary.realEstateValue.toString()}
-                change="5.7"
-                percentage={`${((summary.realEstateValue / summary.totalAum) * 100).toFixed(1)}%`}
-                icon={<Home className="text-amber-600 text-xl" />}
-                iconBg="bg-amber-100"
-                positive={true}
-              />
-              <AccountCard
-                title="Venture/Angel"
-                value={summary.ventureValue.toString()}
-                change="15.3"
-                percentage={`${((summary.ventureValue / summary.totalAum) * 100).toFixed(1)}%`}
-                icon={<Target className="text-purple-600 text-xl" />}
-                iconBg="bg-purple-100"
-                positive={true}
-              />
-              <AccountCard
-                title="Crypto"
-                value={(summary.categoryTotals.crypto || 0).toString()}
-                change="-3.1"
-                percentage={`${(((summary.categoryTotals.crypto || 0) / summary.totalAum) * 100).toFixed(1)}%`}
-                icon={<Bitcoin className="text-yellow-500 text-xl" />}
-                iconBg="bg-yellow-500"
-                positive={false}
-              />
+              <div className="relative">
+                <AccountCard
+                  title="Total AUM"
+                  value={formatValue(summary.totalAum)}
+                  change="12.4"
+                  percentage="vs last month"
+                  icon={<Wallet className="text-primary text-xl" />}
+                  iconBg="bg-primary"
+                  positive={true}
+                />
+              </div>
+              <div className="relative">
+                <AccountCard
+                  title="Traditional"
+                  value={formatValue(summary.traditionalAum, 'traditional')}
+                  change="8.2"
+                  percentage={showValues && !hiddenCategories['traditional'] ? `${((summary.traditionalAum / summary.totalAum) * 100).toFixed(1)}%` : "••%"}
+                  icon={<TrendingUp className="text-secondary text-xl" />}
+                  iconBg="bg-secondary"
+                  positive={true}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 h-6 w-6 p-0"
+                  onClick={() => toggleCategoryVisibility('traditional')}
+                  title={hiddenCategories['traditional'] ? "Show traditional values" : "Hide traditional values"}
+                >
+                  {!hiddenCategories['traditional'] ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                </Button>
+              </div>
+              <div className="relative">
+                <AccountCard
+                  title="Real Estate"
+                  value={formatValue(summary.realEstateValue, 'realestate')}
+                  change="5.7"
+                  percentage={showValues && !hiddenCategories['realestate'] ? `${((summary.realEstateValue / summary.totalAum) * 100).toFixed(1)}%` : "••%"}
+                  icon={<Home className="text-amber-600 text-xl" />}
+                  iconBg="bg-amber-100"
+                  positive={true}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 h-6 w-6 p-0"
+                  onClick={() => toggleCategoryVisibility('realestate')}
+                  title={hiddenCategories['realestate'] ? "Show real estate values" : "Hide real estate values"}
+                >
+                  {!hiddenCategories['realestate'] ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                </Button>
+              </div>
+              <div className="relative">
+                <AccountCard
+                  title="Venture/Angel"
+                  value={formatValue(summary.ventureValue, 'venture')}
+                  change="15.3"
+                  percentage={showValues && !hiddenCategories['venture'] ? `${((summary.ventureValue / summary.totalAum) * 100).toFixed(1)}%` : "••%"}
+                  icon={<Target className="text-purple-600 text-xl" />}
+                  iconBg="bg-purple-100"
+                  positive={true}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 h-6 w-6 p-0"
+                  onClick={() => toggleCategoryVisibility('venture')}
+                  title={hiddenCategories['venture'] ? "Show venture values" : "Hide venture values"}
+                >
+                  {!hiddenCategories['venture'] ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                </Button>
+              </div>
+              <div className="relative">
+                <AccountCard
+                  title="Crypto"
+                  value={formatValue(summary.categoryTotals.crypto || 0, 'crypto')}
+                  change="-3.1"
+                  percentage={showValues && !hiddenCategories['crypto'] ? `${(((summary.categoryTotals.crypto || 0) / summary.totalAum) * 100).toFixed(1)}%` : "••%"}
+                  icon={<Bitcoin className="text-yellow-500 text-xl" />}
+                  iconBg="bg-yellow-500"
+                  positive={false}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 h-6 w-6 p-0"
+                  onClick={() => toggleCategoryVisibility('crypto')}
+                  title={hiddenCategories['crypto'] ? "Show crypto values" : "Hide crypto values"}
+                >
+                  {!hiddenCategories['crypto'] ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                </Button>
+              </div>
             </div>
           )}
 

@@ -11,6 +11,11 @@ interface AccountCardProps {
 }
 
 const formatCurrency = (value: string) => {
+  // If value is already hidden (contains dots), return as-is
+  if (value.includes('••')) {
+    return value;
+  }
+  
   const num = parseFloat(value);
   return new Intl.NumberFormat("en-US", {
     style: "currency",
