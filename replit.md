@@ -199,3 +199,14 @@ The application now provides comprehensive financial data connectivity through b
 - ✓ Maintained separate authentication flows: Plaid for universal access, E*TRADE Direct for advanced functionality
 
 **Architecture Clarification**: Plaid and E*TRADE operate as complementary integration methods, not competing options. Users can connect E*TRADE through Plaid for standard portfolio tracking OR use E*TRADE Direct API for advanced trading features.
+
+### Privacy Controls Implementation (January 30, 2025)
+- ✓ Added global privacy toggle button (eye icon) in dashboard header to hide/show all financial values
+- ✓ Implemented individual category privacy toggles for Traditional, Real Estate, Venture/Angel, and Crypto investments
+- ✓ Added account balance privacy control in sidebar for individual account values
+- ✓ Enhanced value formatting to display "••••••" when hidden and proper currency amounts when visible
+- ✓ Protected percentages and change indicators to also hide when categories are hidden
+- ✓ Fixed NaN display issues with robust number validation and formatting
+- ✓ Maintained consistent privacy state across dashboard components and sidebar
+
+**Privacy Features**: Users can now control financial data visibility at multiple levels - global toggle for all values, individual category toggles for different investment types, and sidebar toggle for account balances. This provides comprehensive privacy protection for sensitive financial information.

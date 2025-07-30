@@ -52,7 +52,7 @@ export default function Dashboard() {
     if (!showValues || (category && hiddenCategories[category])) {
       return "••••••";
     }
-    return `$${value.toLocaleString()}`;
+    return value.toLocaleString();
   };
 
   const { data: accounts = [], isLoading: accountsLoading } = useQuery<Account[]>({

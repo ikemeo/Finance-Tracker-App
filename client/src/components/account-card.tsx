@@ -16,7 +16,16 @@ const formatCurrency = (value: string) => {
     return value;
   }
   
+  // If value is already formatted (contains dollar sign), return as-is
+  if (value.includes('$')) {
+    return value;
+  }
+  
   const num = parseFloat(value);
+  if (isNaN(num)) {
+    return value; // Return original if not a valid number
+  }
+  
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",

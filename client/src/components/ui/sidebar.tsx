@@ -48,7 +48,11 @@ export default function Sidebar({ accounts, onAddAccount }: SidebarProps) {
     if (!showAccountBalances) {
       return "••••••";
     }
-    return `$${parseFloat(balance).toLocaleString()}`;
+    const num = parseFloat(balance);
+    if (isNaN(num)) {
+      return balance; // Return original if not a valid number
+    }
+    return `$${num.toLocaleString()}`;
   };
 
   return (
