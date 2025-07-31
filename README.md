@@ -1,6 +1,6 @@
 # Portfolio Dashboard
 
-A comprehensive financial management platform that enables users to track, analyze, and optimize their multi-asset investment portfolios through advanced data integration and interactive user experiences.
+Personal Project - A comprehensive financial management platform that enables users to track, analyze, and optimize their multi-asset investment portfolios through advanced data integration and interactive user experiences.
 
 ## Features
 
